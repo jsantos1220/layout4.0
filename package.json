@@ -1,0 +1,21 @@
+{
+	"name": "app_base",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"install:all": "npm install && npm run install:backend && npm run install:frontend",
+		"install:backend": "cd backend && npm install",
+		"install:frontend": "cd frontend && npm install",
+		"dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+		"dev:backend": "cd backend && ./pocketbase serve",
+		"dev:frontend": "cd frontend && npm run dev",
+		"build": "cd frontend && npm run build"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"concurrently": "^9.1.2",
+		"dotenv": "^16.4.1"
+	}
+}

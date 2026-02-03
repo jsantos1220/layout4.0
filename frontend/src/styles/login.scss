@@ -1,0 +1,63 @@
+@use 'variables' as *;
+@use 'breakpoints' as *;
+
+/* Auth Pages */
+.auth-page {
+	display: grid;
+	justify-content: center;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	height: 100vh;
+
+	@include md {
+		grid-template-columns: repeat(1, minmax(0, 1fr));
+	}
+
+	.logo {
+		margin-bottom: 40px;
+	}
+
+	.left {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.auth-container {
+		width: 100%;
+		max-width: 400px;
+		margin: 30px 10px;
+		background-color: #fff;
+		border-radius: $border-radius-s;
+		padding: $spacing-large;
+
+		h1 {
+			margin-bottom: $spacing-large;
+			font-weight: 500;
+		}
+
+		.auth-link {
+			text-align: center;
+			margin-top: $spacing-large;
+		}
+
+		.btn {
+			width: 100%;
+		}
+	}
+
+	.right {
+		background: url('../../images/login-bg.jpg');
+		background-position: center center;
+		img {
+			object-fit: cover;
+		}
+
+		@include md {
+			display: none;
+		}
+	}
+
+	.google-auth {
+		margin-top: 16px;
+	}
+}

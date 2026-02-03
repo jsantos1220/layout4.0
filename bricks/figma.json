@@ -1,0 +1,56 @@
+{
+	"frames": [
+		{
+			"name": "Homepage",
+			"sections": [
+				{
+					"name": "Section: Header 6",
+					"heading": "Título de la sección 6",
+					"subtitle": "Este es un subtitulo para la sección 6"
+				},
+				{
+					"name": "Section: Blog Section 7",
+					"heading": "Título de la sección 7",
+					"subtitle": "Este es un subtitulo para la sección 7"
+				},
+				{
+					"name": "Section: Hero Section 1",
+					"heading": "Título de la sección 1",
+					"subtitle": "Este es un subtitulo para la sección 1"
+				},
+				{
+					"name": "Section: Hero Section 10",
+					"heading": "Título de la sección 10",
+					"subtitle": "Este es un subtitulo para la sección 10"
+				}
+			],
+			"headingText": "Nuevo título para esta sección"
+		},
+		{
+			"name": "About",
+			"sections": [
+				{
+					"name": "Section: Header 7",
+					"heading": "Título de la sección 7",
+					"subtitle": "Este es un subtitulo para la sección 7"
+				},
+				{
+					"name": "Section: Hero Section 4",
+					"heading": "Título de la sección 4",
+					"subtitle": "Este es un subtitulo para la sección 4"
+				},
+				{
+					"name": "Section: Hero Section 5",
+					"heading": "Título de la sección 5",
+					"subtitle": "Este es un subtitulo para la sección 5"
+				},
+				{
+					"name": "Section: Blog Section 6",
+					"heading": "Título de la sección 6",
+					"subtitle": "Este es un subtitulo para la sección 6"
+				}
+			],
+			"headingText": "Otro título personalizado"
+		}
+	]
+}

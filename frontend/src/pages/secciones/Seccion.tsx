@@ -1,0 +1,199 @@
+import SidebarSeccionIndividual from '@components/SidebarSeccionIndividual'
+import Fetch from '@utils/Fetch'
+import type { Seccion } from '@/index'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
+import CodeEditor from '@uiw/react-textarea-code-editor'
+import ImagenPrincipal from '@components/editar-seccion/ImagenPrincipal'
+import ImagenesVariables from '@components/editar-seccion/ImagenesVariables'
+import MetaDatos from '@components/editar-seccion/MetaDatos'
+import SidebarCategorias from '@components/editar-seccion/SidebarCategorias'
+import SidebarOpciones from '@components/editar-seccion/SidebarOpciones'
+import TextoEditable from '@components/inputs/TextoEditable'
+import { useControlSave } from '@components/hooks/useControlSave'
+
+export default function Seccion() {
+	const { seccion_id } = useParams()
+	const navigate = useNavigate()
+	const [seccion, setSeccion] = useState<Seccion | undefined>()
+	const [nuevaImagenPrincipal, setNuevaImagenPrincipal] = useState<File | undefined>()
+	const [nuevaImagenAmarilla, setNuevaImagenAmarilla] = useState<File | undefined>()
+	const [nuevaImagenVerde, setNuevaImagenVerde] = useState<File | undefined>()
+	const [nuevaImagenRoja, setNuevaImagenRoja] = useState<File | undefined>()
+	const [loading, setLoading] = useState<boolean>(false)
+	const [titulo, setTitulo] = useState<string>('')
+
+	useEffect(() => {
+		buscarSeccion()
+	}, [])
+
+	//Guardar con control + s
+	useControlSave(handleUpdateSeccion)
+
+	async function buscarSeccion() {
+		try {
+			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sections/${seccion_id}`)
+			const response = await query.json()
+
+			if (typeof response.section == 'object') {
+				setSeccion(response.section)
+				setTitulo(response.section.nombre)
+			} else {
+				console.log('No esta encontrando el proyecto')
+				navigate('/secciones')
+			}
+		} catch (error) {
+			navigate('/secciones')
+			console.log(error)
+		}
+	}
+
+	async function handleUpdateSeccion() {
+		if (!seccion) return
+
+		const formData = new FormData()
+
+		// Agrega todos los campos de seccion (excepto imágenes)
+		Object.entries(seccion).forEach(([key, value]) => {
+			// Si el valor es null o undefined, no lo agregues
+			if (value !== undefined && value !== null) {
+				formData.append(key, String(value))
+			}
+		})
+
+		//Agregar el titulo al FormData
+		formData.set('nombre', titulo)
+		formData.set('activo', '1')
+
+		// Solo agrega las imágenes si hay nuevas seleccionadas
+		if (nuevaImagenPrincipal) {
+			formData.append('imagen_principal', nuevaImagenPrincipal)
+		}
+		if (nuevaImagenAmarilla) {
+			formData.append('imagen_amarilla', nuevaImagenAmarilla)
+		}
+		if (nuevaImagenVerde) {
+			formData.append('imagen_verde', nuevaImagenVerde)
+		}
+		if (nuevaImagenRoja) {
+			formData.append('imagen_roja', nuevaImagenRoja)
+		}
+
+		// Ejemplo de envío
+		try {
+			setLoading(true)
+
+			const response = await Fetch(
+				`${import.meta.env.VITE_BACKEND_URL}/api/sections/update`,
+				{
+					method: 'POST', // o 'PUT' según tu API
+					body: formData,
+				},
+				true,
+			)
+			//const data = await response.json()
+
+			if (!response.ok) throw new Error()
+			// Refresca la sección después de un update exitoso
+			await buscarSeccion()
+
+			//Limpiar las imagenes
+			setNuevaImagenPrincipal(undefined)
+			setNuevaImagenAmarilla(undefined)
+			setNuevaImagenVerde(undefined)
+			setNuevaImagenRoja(undefined)
+		} catch (error) {
+			console.log(error)
+			// Maneja el error aquí
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	return (
+		<div className=''>
+			<div className='header margin-bottom-s'>
+				<h1 className='flex-row items-middle flex-wrap gap-2xs'>
+					{seccion?.activo == '0' && <div className='estado-borrado'></div>}
+					<TextoEditable texto={titulo} setTexto={setTitulo} size={34} />
+				</h1>
+			</div>
+
+			<div className='seccion-int'>
+				<div className='columna columna-1'>
+					<div className='panel-blanco'>
+						<div className='titulo'>Imagen principal</div>
+
+						<ImagenPrincipal
+							seccion={seccion}
+							nuevaImagenPrincipal={nuevaImagenPrincipal}
+							setNuevaImagenPrincipal={setNuevaImagenPrincipal}
+						/>
+					</div>
+
+					<div className='panel-blanco'>
+						<div className='titulo'>Variaciones de imagenes</div>
+
+						<ImagenesVariables
+							seccion={seccion}
+							nuevaImagenAmarilla={nuevaImagenAmarilla}
+							setNuevaImagenAmarilla={setNuevaImagenAmarilla}
+							nuevaImagenRoja={nuevaImagenRoja}
+							setNuevaImagenRoja={setNuevaImagenRoja}
+							nuevaImagenVerde={nuevaImagenVerde}
+							setNuevaImagenVerde={setNuevaImagenVerde}
+						/>
+					</div>
+
+					<div className='panel-blanco'>
+						<div className='titulo'>Código de Bricks</div>
+
+						<div className='cotenido-panel'>
+							<CodeEditor
+								value={seccion?.codigo}
+								language='js'
+								onChange={e =>
+									setSeccion(seccion => {
+										if (!seccion) return
+										return {
+											...seccion,
+											codigo: e.target.value,
+										}
+									})
+								}
+								padding={15}
+							/>
+						</div>
+					</div>
+				</div>
+
+				<div className='columna columna-2'>
+					<div className='panel-blanco'>
+						<div className='titulo'>Meta datos</div>
+
+						<MetaDatos seccion={seccion} setSeccion={setSeccion} />
+					</div>
+
+					<div className='panel-blanco'>
+						<div className='titulo'>Categorías</div>
+
+						<SidebarCategorias seccion_id={seccion?.seccion_id} />
+					</div>
+
+					<div className='panel-blanco'>
+						<div className='titulo'>Opciones</div>
+
+						<SidebarOpciones seccion_id={seccion?.seccion_id} />
+					</div>
+				</div>
+
+				<div className='columna-3'>
+					<SidebarSeccionIndividual
+						loading={loading}
+						handleUpdateSeccion={handleUpdateSeccion}
+					/>
+				</div>
+			</div>
+		</div>
+	)
+}

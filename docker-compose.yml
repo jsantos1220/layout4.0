@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+   backend:
+      build:
+         context: ./backend
+         dockerfile: Dockerfile
+      container_name: layout-backend
+      ports:
+         - '3001:3001'
+      volumes:
+         - ./database:/app/database
+         - uploads-data:/app/public/uploads
+      environment:
+         - NODE_ENV=production
+         - PORT=3001
+         - DATABASE_PATH=/app/database/database.db
+      networks:
+         - layout-network
+      restart: unless-stopped
+
+   frontend:
+      build:
+         context: ./frontend
+         dockerfile: Dockerfile
+      container_name: layout-frontend
+      ports:
+         - '3000:80'
+      depends_on:
+         - backend
+      environment:
+         - VITE_BACKEND_URL=http://localhost:3001
+      networks:
+         - layout-network
+      restart: unless-stopped
+
+volumes:
+   uploads-data:
+      driver: local
+
+networks:
+   layout-network:
+      driver: bridge
