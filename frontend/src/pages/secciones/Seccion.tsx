@@ -51,6 +51,15 @@ export default function Seccion() {
 	async function handleUpdateSeccion() {
 		if (!seccion) return
 
+		/* 
+         Donde me quede? hay que ver klk con el type de las imagenes
+         que es lo que estamos guardando si es un string o un File
+         Luego hay que hacer una petición de prueba a ver si se crea 
+         la sección, despues hay que poner todo esto a funcionar con 
+         react query y poner a funcionar todo lo demás, gracias
+      
+      */
+
 		const payload: Partial<Seccion> = {
 			nombre: titulo,
 			activo: true,
