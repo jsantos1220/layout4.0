@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 
-import { Proyecto } from 'index'
+import { Proyecto } from '@/index'
 import { ArrowLeftToLine, Plus, Trash2 } from 'lucide-react'
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL
@@ -103,11 +103,7 @@ export default function Proyectos() {
 			<div className='columns-4 column--on-m gap-m margin-top-m'>
 				{proyectosFiltrados &&
 					proyectosFiltrados.map((proyecto, index) => (
-						<Link
-							to={`/proyectos/${proyecto.proyecto_id}`}
-							key={index}
-							className='proyecto-card'
-						>
+						<Link to={`/proyectos/${proyecto.id}`} key={index} className='proyecto-card'>
 							<div className='imagen margin-bottom-xs'>
 								{proyecto.imagen == '' ? (
 									<img src={`${backendUrl}/uploads/placeholder.jpg`} />
@@ -120,7 +116,7 @@ export default function Proyectos() {
 								<h4>{proyecto.nombre}</h4>
 
 								<p className='text-s'>
-									{proyecto.created_at} - {proyecto.updated_at}
+									{proyecto.created} - {proyecto.updated}
 								</p>
 							</div>
 						</Link>

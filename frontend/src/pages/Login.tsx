@@ -1,9 +1,15 @@
 import { useNavigate } from 'react-router'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+//import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import authClient from '@lib/auth-client'
+import { useEffect } from 'react'
+import useAuthStore from '@context/useAuthContext'
+import pb from '@lib/pocketbase'
+import { Input } from '@styles/ui/Inputs'
 
+/* 
+   TODO: No se esta usando el validador de zod
+*/
 const schema = z.object({
 	email: z.string().email(),
 	password: z.string().min(8),
@@ -11,11 +17,20 @@ const schema = z.object({
 
 type LoginForm = z.infer<typeof schema>
 
+type FormData = {
+	email: string
+	password: string
+}
+
 export default function Login() {
 	const navigate = useNavigate()
-	const { data: session } = authClient.useSession()
+	const { user } = useAuthStore()
 
-	if (session) navigate('/dashboard')
+	useEffect(() => {
+		if (user) {
+			navigate('/')
+		}
+	}, [user, navigate])
 
 	const {
 		register,
@@ -25,24 +40,17 @@ export default function Login() {
 	} = useForm<LoginForm>({
 		defaultValues: {
 			email: '',
+			password: '',
 		},
-		resolver: zodResolver(schema),
 	})
 
-	const onSubmit: SubmitHandler<LoginForm> = async data => {
+	const onSubmit: SubmitHandler<FormData> = async datos => {
+		const { email, password } = datos
 		try {
-			const { data: _signinData, error } = await authClient.signIn.email({
-				email: data.email, // required
-				password: data.password,
-				callbackURL: '/dashboard',
-			})
-
-			if (error) throw new Error(error.message)
+			await pb.collection('users').authWithPassword(email, password)
 		} catch (error) {
-			//console.log(error)
-			setError('root', {
-				message: error.message,
-			})
+			//console.log(error.status)
+			setError('root', { message: 'Hubo un error en la autenticación' })
 		}
 	}
 
@@ -57,14 +65,34 @@ export default function Login() {
 					<form onSubmit={handleSubmit(onSubmit)}>
 						<div className='form-group'>
 							<label htmlFor='email'>Username or email *</label>
-							<input {...register('email')} placeholder='email@email.com' type='email' />
+							<Input
+								{...register('email', {
+									required: 'Email is required',
+									pattern: {
+										value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+										message: 'Please enter a valid email',
+									},
+								})}
+								placeholder='email@email.com'
+								//type='email'
+							/>
 							{errors.email && <div className='error-message'>{errors.email.message}</div>}
 						</div>
 
 						<div className='form-group'>
 							<label htmlFor='password'>Password</label>
 
-							<input {...register('password')} type='password' placeholder='Password' />
+							<Input
+								{...register('password', {
+									required: 'Password is required',
+									minLength: {
+										value: 8,
+										message: 'Password must be at least 8 characters',
+									},
+								})}
+								type='password'
+								placeholder='Password'
+							/>
 
 							{errors.password && (
 								<div className='error-message'>{errors.password.message}</div>
@@ -74,6 +102,7 @@ export default function Login() {
 						<button type='submit' className='btn btn-primary' disabled={isSubmitting}>
 							{isSubmitting ? 'Logging in...' : 'Login'}
 						</button>
+
 						{errors.root && (
 							<div className='error-message' style={{ marginTop: 10 }}>
 								{errors.root.message}

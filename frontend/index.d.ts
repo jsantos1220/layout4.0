@@ -4,16 +4,11 @@ export type User = {
 	email: string
 	google_id?: string
 	status?: 'active' | 'inactive'
-	role?:
-		| 'super_admin'
-		| 'system_admin'
-		| 'organization_owner'
-		| 'organization_worker'
-		| 'user'
+	role?: 'super_admin' | 'system_admin' | 'organization_owner' | 'organization_worker' | 'user'
 }
 
 export type Proyecto = {
-	proyecto_id: string
+	id: string
 	user_id: string
 	cliente_id?: string
 	nombre: string
@@ -21,24 +16,24 @@ export type Proyecto = {
 	codigo?: string
 	contenido?: string
 	activo?: string
-	created_at?: string | number
-	updated_at?: string | number
+	created?: string | number
+	updated?: string | number
 	paginas: Pagina[]
 }
 
 export interface Pagina {
-	pagina_id: string
+	id: string
 	nombre: string
 	proyecto_id?: string
 	plantilla_id?: string
 	secciones?: Seccion[]
 	orden?: number | string
-	created_at: string | number
-	updated_at: string | number
+	created: string | number
+	updated: string | number
 }
 
 export type Seccion = {
-	seccion_id: string
+	id: string
 	nombre: string
 	imagen_principal?: string
 	imagen_amarilla?: string
@@ -51,30 +46,31 @@ export type Seccion = {
 	descripcion?: number
 	cta?: number
 	items?: number
+	liked?: number
 	categorias?: Categoria[]
 	opciones?: Opcion[]
 	draggable_id?: string
 	activo?: string
-	created_at?: string | number
-	updated_at?: string | number
+	created?: string | number
+	updated?: string | number
 }
 
 export type Categoria = {
-	categoria_id: string
+	id: string
 	nombre: string
-	created_at?: number | string
-	updated_at?: string
+	created?: number | string
+	updated?: string
 }
 
 export type Opcion = {
-	opcion_id: string
+	id: string
 	nombre: string
-	created_at?: number | string
-	updated_at?: string
+	created?: number | string
+	updated?: string
 }
 
 export type Cliente = {
-	cliente_id: string
+	id: string
 	nombre: string
 	logo_color?: string
 	logo_blanco?: string
@@ -87,17 +83,45 @@ export type Cliente = {
 	direccion?: string
 	mapa?: string
 	redes_sociales?: string
-	created_at?: string
-	updated_at?: string
+	created?: string
+	updated?: string
 }
 
 export type Plantilla = {
-	plantilla_id: string
+	id: string
 	user_id: string
 	nombre: string
+	paginas?: string
 	imagen?: string
-	created_at?: string
-	updated_at?: string
+	created?: string
+	updated?: string
+}
+
+export type Categorias_secciones = {
+	id: string
+	categoria_id: string
+	seccion_id: string
+	user_id: string
+	created: string
+	updated: string
+}
+
+export type Opciones_secciones = {
+	id: string
+	opcion_id: string
+	seccion_id: string
+	user_id: string
+	created: string
+	updated: string
+}
+
+export type Paginas_secciones = {
+	id: string
+	opcion_id: string
+	seccion_id: string
+	user_id: string
+	created: string
+	updated: string
 }
 
 export type Bricks = {

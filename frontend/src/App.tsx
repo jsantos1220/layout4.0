@@ -13,6 +13,10 @@ import Categorias from '@pages/secciones/Categorias'
 import Opciones from '@pages/secciones/Opciones'
 import Cliente from '@pages/clientes/Cliente'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ThemeProvider } from 'styled-components'
+import theme from '@styles/theme'
+import useAuthStore from '@context/useAuthContext'
+import { useEffect } from 'react'
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -23,32 +27,42 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
+	//Asigna usuario en localstore a zustand
+	const init = useAuthStore(s => s.init)
+
+	useEffect(() => {
+		init()
+	}, [])
+
 	return (
 		<QueryClientProvider client={queryClient}>
-			<Router>
-				<Routes>
-					<Route path='/login' element={<Login />} />
+			<ThemeProvider theme={theme}>
+				<Router>
+					<Routes>
+						<Route path='/login' element={<Login />} />
 
-					<Route element={<ProtectedRoute />}>
-						<Route path='/' element={<Home />} />
+						<Route element={<ProtectedRoute />}>
+							<Route path='/' element={<Home />} />
 
-						<Route path='/proyectos' element={<Proyectos />} />
-						<Route path='/proyectos/:proyecto_id' element={<Proyecto />} />
-						<Route path='/proyectos/nuevo' element={<NuevoProyecto />} />
+							<Route path='/proyectos' element={<Proyectos />} />
+							<Route path='/proyectos/:proyecto_id' element={<Proyecto />} />
+							<Route path='/proyectos/nuevo' element={<NuevoProyecto />} />
 
-						<Route path='/secciones' element={<Secciones />} />
-						<Route path='/secciones/:seccion_id' element={<Seccion />} />
-						<Route path='/categorias' element={<Categorias />} />
-						<Route path='/opciones' element={<Opciones />} />
+							<Route path='/secciones' element={<Secciones />} />
+							<Route path='/secciones/:seccion_id' element={<Seccion />} />
+							<Route path='/categorias' element={<Categorias />} />
+							<Route path='/opciones' element={<Opciones />} />
 
-						<Route path='/clientes' element={<Clientes />} />
-						<Route path='/clientes/:cliente_id' element={<Cliente />} />
+							<Route path='/clientes' element={<Clientes />} />
+							<Route path='/clientes/:cliente_id' element={<Cliente />} />
 
-						<Route path='/plantillas' element={<Plantillas />} />
-					</Route>
-					<Route path='*' element={<Navigate to='/' replace />} />
-				</Routes>
-			</Router>
+							<Route path='/plantillas' element={<Plantillas />} />
+						</Route>
+
+						<Route path='*' element={<Navigate to='/' replace />} />
+					</Routes>
+				</Router>
+			</ThemeProvider>
 		</QueryClientProvider>
 	)
 }

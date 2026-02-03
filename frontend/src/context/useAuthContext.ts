@@ -1,78 +1,51 @@
+// stores/auth.store.ts
 import { create } from 'zustand'
+import pb from '@lib/pocketbase'
+import type { RecordModel } from 'pocketbase'
 
-import type { User } from '@/index'
-
-interface AuthState {
-	isAuthenticated: boolean
-	user?: User | null
-	token: string | null
+type AuthState = {
+	user: RecordModel | null
+	isAuth: boolean
 	loading: boolean
-	login: (user: User, token: string) => void
-	logout: () => Promise<void>
-	restoreSession: () => Promise<void>
+
+	init: () => void
+	login: (email: string, password: string) => Promise<void>
+	logout: () => void
 }
 
 const useAuthStore = create<AuthState>(set => ({
 	user: null,
-	token: null,
-	isAuthenticated: false,
-	loading: true,
+	isAuth: false,
+	loading: false,
 
-	login: (user, token) => {
+	init: () => {
+		// hidrata desde authStore
 		set({
-			user,
-			token,
-			isAuthenticated: true,
+			user: pb.authStore.record,
+			isAuth: pb.authStore.isValid,
+			loading: false,
+		})
+
+		// escucha cambios (login / logout / refresh)
+		pb.authStore.onChange((_token, model) => {
+			console.log(model)
+			set({
+				user: model,
+				isAuth: pb.authStore.isValid,
+				loading: false,
+			})
 		})
 	},
 
-	logout: async () => {
-		try {
-			//console.log(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`)
-			const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`, {
-				credentials: 'include',
-				method: 'POST',
-			})
-
-			if (response.ok) {
-				set({
-					user: null,
-					token: null,
-					isAuthenticated: false,
-				})
-			}
-		} catch (err) {
-			set({ loading: false })
-			console.error(err)
-		}
+	login: async (email, password) => {
+		set({ loading: true })
+		await pb.collection('users').authWithPassword(email, password)
+		set({ loading: false })
 	},
 
-	restoreSession: async () => {
-		try {
-			const response = await fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/auth/refresh-token`,
-				{
-					credentials: 'include',
-					method: 'POST',
-				},
-			)
-
-			const data = await response.json()
-
-			if (data.accessToken) {
-				set({
-					isAuthenticated: true,
-					token: data.accessToken,
-					loading: false,
-					user: data.user,
-				})
-			} else {
-				set({ loading: false })
-			}
-		} catch (err) {
-			set({ loading: false })
-			console.error(err)
-		}
+	logout: () => {
+		pb.authStore.clear()
+		set({ user: null, isAuth: false })
 	},
 }))
 

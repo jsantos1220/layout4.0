@@ -51,33 +51,16 @@ export default function Seccion() {
 	async function handleUpdateSeccion() {
 		if (!seccion) return
 
-		const formData = new FormData()
+		const payload: Partial<Seccion> = {
+			nombre: titulo,
+			activo: true,
+		}
 
-		// Agrega todos los campos de seccion (excepto imágenes)
-		Object.entries(seccion).forEach(([key, value]) => {
-			// Si el valor es null o undefined, no lo agregues
-			if (value !== undefined && value !== null) {
-				formData.append(key, String(value))
-			}
-		})
-
-		//Agregar el titulo al FormData
-		formData.set('nombre', titulo)
-		formData.set('activo', '1')
-
-		// Solo agrega las imágenes si hay nuevas seleccionadas
-		if (nuevaImagenPrincipal) {
-			formData.append('imagen_principal', nuevaImagenPrincipal)
-		}
-		if (nuevaImagenAmarilla) {
-			formData.append('imagen_amarilla', nuevaImagenAmarilla)
-		}
-		if (nuevaImagenVerde) {
-			formData.append('imagen_verde', nuevaImagenVerde)
-		}
-		if (nuevaImagenRoja) {
-			formData.append('imagen_roja', nuevaImagenRoja)
-		}
+		// Solo agrega imágenes si hay nuevas
+		if (nuevaImagenPrincipal) payload.imagen_principal = nuevaImagenPrincipal
+		if (nuevaImagenAmarilla) payload.imagen_amarilla = nuevaImagenAmarilla
+		if (nuevaImagenVerde) payload.imagen_verde = nuevaImagenVerde
+		if (nuevaImagenRoja) payload.imagen_roja = nuevaImagenRoja
 
 		// Ejemplo de envío
 		try {
@@ -94,6 +77,7 @@ export default function Seccion() {
 			//const data = await response.json()
 
 			if (!response.ok) throw new Error()
+
 			// Refresca la sección después de un update exitoso
 			await buscarSeccion()
 
@@ -177,13 +161,13 @@ export default function Seccion() {
 					<div className='panel-blanco'>
 						<div className='titulo'>Categorías</div>
 
-						<SidebarCategorias seccion_id={seccion?.seccion_id} />
+						<SidebarCategorias seccion_id={seccion?.id} />
 					</div>
 
 					<div className='panel-blanco'>
 						<div className='titulo'>Opciones</div>
 
-						<SidebarOpciones seccion_id={seccion?.seccion_id} />
+						<SidebarOpciones seccion_id={seccion?.id} />
 					</div>
 				</div>
 
