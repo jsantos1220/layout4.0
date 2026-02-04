@@ -10,11 +10,7 @@ import debounce from '@utils/debounce'
 const icon = <CheckBoxOutlineBlankIcon fontSize='small' />
 const checkedIcon = <CheckBoxIcon fontSize='small' />
 
-export default function SidebarOpciones({
-	seccion_id,
-}: {
-	seccion_id: string | undefined
-}) {
+export default function SidebarOpciones({ seccion_id }: { seccion_id: string | undefined }) {
 	const [opcionesGral, setOpcionesGenerales] = useState<Opcion[] | undefined>()
 	const [opcionesFinales, setOpcionesFinales] = useState<Opcion[] | undefined>([])
 	const [addNew, setAddNew] = useState(false)
@@ -36,7 +32,7 @@ export default function SidebarOpciones({
 			}
 		}
 
-		buscarOpcionesGenerales()
+		//buscarOpcionesGenerales()
 	}, [seccion_id])
 
 	//Buscar opciones que ya se asosia con este recurso
@@ -46,14 +42,12 @@ export default function SidebarOpciones({
 		async function fetchFinales() {
 			try {
 				const query = await Fetch(
-					`${
-						import.meta.env.VITE_BACKEND_URL
-					}/api/opciones-secciones/all/${seccion_id}`
+					`${import.meta.env.VITE_BACKEND_URL}/api/opciones-secciones/all/${seccion_id}`,
 				)
 				const response = await query.json()
 				const finales = response.opciones
 					.map((opcionFinal: Opcion) =>
-						opcionesGral?.find(cat => cat.opcion_id === opcionFinal.opcion_id)
+						opcionesGral?.find(cat => cat.opcion_id === opcionFinal.opcion_id),
 					)
 					.filter(Boolean) as Opcion[]
 				setOpcionesFinales(finales)
@@ -76,7 +70,7 @@ export default function SidebarOpciones({
 				{
 					method: 'post',
 					body: JSON.stringify({ seccion_id, opciones }),
-				}
+				},
 			)
 
 			if (query.ok) {
@@ -92,18 +86,15 @@ export default function SidebarOpciones({
 	//Esta función se dispara esperando 3 segundos para actualizar despacio
 	const debouncedActualizarOpciones = useCallback(
 		debounce((opciones: Opcion[]) => actualizarOpcionesEnSeccion(opciones), 2000),
-		[seccion_id]
+		[seccion_id],
 	)
 
 	async function handleNewOption() {
 		try {
-			const query = await Fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/opciones/create/`,
-				{
-					method: 'post',
-					body: JSON.stringify({ nombre: newOption }),
-				}
-			)
+			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/opciones/create/`, {
+				method: 'post',
+				body: JSON.stringify({ nombre: newOption }),
+			})
 
 			const response = await query.json()
 			const nuevaOpcion = response.opcion

@@ -1,4 +1,4 @@
-import { Seccion } from 'index'
+import { Seccion } from '@/index'
 import InputSwitch from '../inputs/InputSwitch'
 
 type MetadatosType = {
@@ -20,11 +20,11 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 					onChange={e =>
 						setSeccion(seccion => {
 							if (!seccion) return
-							const imagen_background = e.target.checked == true ? 1 : 0
+							const imagen_background = e.target.checked
 							return { ...seccion, imagen_background }
 						})
 					}
-					checked={seccion?.imagen_background == 1 ? true : false}
+					checked={seccion?.imagen_background}
 				/>
 			</div>
 
@@ -39,11 +39,11 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 					onChange={e =>
 						setSeccion(seccion => {
 							if (!seccion) return
-							const titulo = e.target.checked == true ? 1 : 0
+							const titulo = e.target.checked
 							return { ...seccion, titulo }
 						})
 					}
-					checked={seccion?.titulo == 1 ? true : false}
+					checked={seccion?.titulo}
 				/>
 			</div>
 
@@ -58,11 +58,11 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 					onChange={e =>
 						setSeccion(seccion => {
 							if (!seccion) return
-							const subtitulo = e.target.checked == true ? 1 : 0
+							const subtitulo = e.target.checked
 							return { ...seccion, subtitulo }
 						})
 					}
-					checked={seccion?.subtitulo == 1 ? true : false}
+					checked={seccion?.subtitulo}
 				/>
 			</div>
 
@@ -77,11 +77,11 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 					onChange={e =>
 						setSeccion(seccion => {
 							if (!seccion) return
-							const descripcion = e.target.checked == true ? 1 : 0
+							const descripcion = e.target.checked
 							return { ...seccion, descripcion }
 						})
 					}
-					checked={seccion?.descripcion == 1 ? true : false}
+					checked={seccion?.descripcion}
 				/>
 			</div>
 
@@ -96,11 +96,11 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 					onChange={e =>
 						setSeccion(seccion => {
 							if (!seccion) return
-							const cta = e.target.checked == true ? 1 : 0
+							const cta = e.target.checked
 							return { ...seccion, cta }
 						})
 					}
-					checked={seccion?.cta == 1 ? true : false}
+					checked={seccion?.cta}
 				/>
 			</div>
 

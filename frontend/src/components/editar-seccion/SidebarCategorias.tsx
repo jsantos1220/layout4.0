@@ -1,5 +1,5 @@
 import { Autocomplete, Checkbox, TextField } from '@mui/material'
-import { Categoria } from 'index'
+import { Categoria } from '@/index'
 import { Check } from 'lucide-react'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
@@ -10,11 +10,7 @@ import debounce from '@utils/debounce'
 const icon = <CheckBoxOutlineBlankIcon fontSize='small' />
 const checkedIcon = <CheckBoxIcon fontSize='small' />
 
-export default function SidebarCategorias({
-	seccion_id,
-}: {
-	seccion_id: string | undefined
-}) {
+export default function SidebarCategorias({ seccion_id }: { seccion_id: string | undefined }) {
 	const [categoriasGral, setCategoriasGenerales] = useState<Categoria[] | undefined>()
 	const [categoriasFinales, setCategoriasFinales] = useState<Categoria[] | undefined>([])
 	const [addNew, setAddNew] = useState(false)
@@ -27,9 +23,7 @@ export default function SidebarCategorias({
 
 		async function buscarCategoriasGenerales() {
 			try {
-				const query = await Fetch(
-					`${import.meta.env.VITE_BACKEND_URL}/api/categorias/`
-				)
+				const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/`)
 				const response = await query.json()
 
 				setCategoriasGenerales(response.categorias)
@@ -38,7 +32,7 @@ export default function SidebarCategorias({
 			}
 		}
 
-		buscarCategoriasGenerales()
+		//buscarCategoriasGenerales()
 	}, [seccion_id])
 
 	//Buscar categorías que ya se asosia con este recurso
@@ -48,15 +42,11 @@ export default function SidebarCategorias({
 		async function fetchFinales() {
 			try {
 				const query = await Fetch(
-					`${
-						import.meta.env.VITE_BACKEND_URL
-					}/api/categorias-secciones/all/${seccion_id}`
+					`${import.meta.env.VITE_BACKEND_URL}/api/categorias-secciones/all/${seccion_id}`,
 				)
 				const response = await query.json()
 				const finales = response.categorias
-					.map((catFinal: Categoria) =>
-						categoriasGral?.find(cat => cat.categoria_id === catFinal.categoria_id)
-					)
+					.map((catFinal: Categoria) => categoriasGral?.find(cat => cat.id === catFinal.id))
 					.filter(Boolean) as Categoria[]
 				setCategoriasFinales(finales)
 			} catch (error) {
@@ -64,7 +54,7 @@ export default function SidebarCategorias({
 			}
 		}
 
-		fetchFinales()
+		//fetchFinales()
 	}, [seccion_id, categoriasGral])
 
 	//Se ejecuta cuando se actualizan las categorias finales
@@ -74,13 +64,11 @@ export default function SidebarCategorias({
 	async function actualizarCategoriasEnSeccion(categorias: Categoria[]) {
 		try {
 			const query = await Fetch(
-				`${
-					import.meta.env.VITE_BACKEND_URL
-				}/api/categorias-secciones/update-multiple/`,
+				`${import.meta.env.VITE_BACKEND_URL}/api/categorias-secciones/update-multiple/`,
 				{
 					method: 'post',
 					body: JSON.stringify({ seccion_id, categorias }),
-				}
+				},
 			)
 
 			if (query.ok) {
@@ -95,22 +83,16 @@ export default function SidebarCategorias({
 
 	//Esta función se dispara esperando 3 segundos para actualizar despacio
 	const debouncedActualizarCategorias = useCallback(
-		debounce(
-			(categorias: Categoria[]) => actualizarCategoriasEnSeccion(categorias),
-			2000
-		),
-		[seccion_id]
+		debounce((categorias: Categoria[]) => actualizarCategoriasEnSeccion(categorias), 2000),
+		[seccion_id],
 	)
 
 	async function handleNewCategory() {
 		try {
-			const query = await Fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/categorias/create/`,
-				{
-					method: 'post',
-					body: JSON.stringify({ nombre: newCategory }),
-				}
-			)
+			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/create/`, {
+				method: 'post',
+				body: JSON.stringify({ nombre: newCategory }),
+			})
 
 			const response = await query.json()
 			const nuevaCategoria = response.categoria

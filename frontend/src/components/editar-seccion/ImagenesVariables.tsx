@@ -1,6 +1,7 @@
 import React from 'react'
-import { Seccion } from 'index'
+import { Seccion } from '@/index'
 import ImageFileInput from '../inputs/FileInput'
+import pb from '@lib/pocketbase'
 
 type ImagenesVariablesType = {
 	seccion: Seccion | undefined
@@ -21,7 +22,11 @@ export default function ImagenesVariables({
 	nuevaImagenVerde,
 	setNuevaImagenVerde,
 }: ImagenesVariablesType) {
-	const backendUrl = import.meta.env.VITE_BACKEND_URL
+	const imagen_amarilla = pb.files.getURL(seccion, seccion?.imagen_amarilla)
+	const imagen_roja = pb.files.getURL(seccion, seccion?.imagen_roja)
+	const imagen_verde = pb.files.getURL(seccion, seccion?.imagen_verde)
+
+	const placeholder = '../../../images/placeholder.jpg'
 
 	return (
 		<div className='cotenido-panel tres-columnas'>
@@ -31,13 +36,10 @@ export default function ImagenesVariables({
 
 				<div className='contenedor-imagen'>
 					{seccion?.imagen_amarilla == '' ? (
-						<img
-							src={backendUrl + '/uploads/placeholder.jpg'}
-							alt='Imagen principal'
-						/>
+						<img src={placeholder} alt='Imagen principal' />
 					) : (
 						<img
-							src={backendUrl + '/uploads/' + seccion?.imagen_amarilla}
+							src={imagen_amarilla == '' ? placeholder : imagen_amarilla}
 							alt='Imagen principal'
 						/>
 					)}
@@ -60,15 +62,9 @@ export default function ImagenesVariables({
 
 				<div className='contenedor-imagen'>
 					{seccion?.imagen_roja == '' ? (
-						<img
-							src={backendUrl + '/uploads/placeholder.jpg'}
-							alt='Imagen principal'
-						/>
+						<img src={placeholder} alt='Imagen principal' />
 					) : (
-						<img
-							src={backendUrl + '/uploads/' + seccion?.imagen_roja}
-							alt='Imagen principal'
-						/>
+						<img src={imagen_roja == '' ? placeholder : imagen_roja} alt='Imagen principal' />
 					)}
 				</div>
 
@@ -89,13 +85,10 @@ export default function ImagenesVariables({
 
 				<div className='contenedor-imagen'>
 					{seccion?.imagen_verde == '' ? (
-						<img
-							src={backendUrl + '/uploads/placeholder.jpg'}
-							alt='Imagen principal'
-						/>
+						<img src={placeholder} alt='Imagen principal' />
 					) : (
 						<img
-							src={backendUrl + '/uploads/' + seccion?.imagen_verde}
+							src={imagen_verde == '' ? placeholder : imagen_verde}
 							alt='Imagen principal'
 						/>
 					)}

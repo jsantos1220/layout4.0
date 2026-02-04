@@ -1,44 +1,64 @@
 import { Autocomplete, Checkbox, FormControlLabel, FormGroup, TextField } from '@mui/material'
-import Fetch from '@utils/Fetch'
 import { ArrowLeftToLine, Copy, Plus, Trash2 } from 'lucide-react'
 import FavoriteIcon from '@mui/icons-material/Favorite'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-
+import Swal from 'sweetalert2'
 import type { Seccion } from '@/index'
+import { createSeccion, getAllSecciones } from '@/src/api/crudSecciones'
+import pb from '@lib/pocketbase'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const icon = <CheckBoxOutlineBlankIcon fontSize='small' />
 const checkedIcon = <CheckBoxIcon fontSize='small' />
-const backendUrl = import.meta.env.VITE_BACKEND_URL
 
 export default function Secciones() {
-	const [secciones, setSecciones] = useState<Seccion[] | null>()
+	//const [secciones, setSecciones] = useState<Seccion[] | null>()
 	const [seccionesFiltradas, setSeccionesFiltradas] = useState<Seccion[] | null>()
 	const [categorias, setCategorias] = useState<string[]>([])
 	const [categoriasFiltradas, setCategoriasFiltradas] = useState<string[]>([])
 	const [opciones, setOpciones] = useState<string[]>([])
 	const [opcionesFiltradas, setOpcionesFiltradas] = useState<string[] | undefined>([])
-	const [creandoSeccion, setCreandoSeccion] = useState(false)
 	const [borrados, setBorrados] = useState<boolean>(false)
 	let navigate = useNavigate()
+	const queryClient = useQueryClient()
 
-	async function buscarSecciones() {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sections/`)
-			const response = await query.json()
+	const {
+		data: secciones,
+		//error: errorQuery,
+		//isLoading,
+	} = useQuery({
+		queryKey: ['secciones'],
+		queryFn: async () => getAllSecciones(),
+	})
 
-			setSecciones(response.secciones)
-		} catch (error) {
-			console.log(error)
-		}
-	}
-
-	//Busca las secciones
-	useEffect(() => {
-		buscarSecciones()
-	}, [])
+	// Crear sección
+	const { mutate: crearSeccion, isPending } = useMutation({
+		mutationFn: async () => {
+			return await createSeccion()
+		},
+		onSuccess: data => {
+			Swal.fire({
+				title: 'Sección creada',
+				icon: 'success',
+				showConfirmButton: false,
+				timer: 1500,
+				timerProgressBar: true,
+			}).then(() => {
+				navigate(`/secciones/${data.id}`)
+			})
+			queryClient.invalidateQueries({ queryKey: ['secciones'] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al crear sección',
+				text: error.message,
+				icon: 'error',
+			})
+		},
+	})
 
 	//Llena las categorias y las opciones
 	useEffect(() => {
@@ -71,7 +91,7 @@ export default function Secciones() {
 
 		const nuevasSeccionesFiltradas = secciones.filter(seccion => {
 			// NUEVO: Filtro por estado activo (siempre se aplica primero)
-			const estadoRequerido = borrados ? '0' : '1'
+			const estadoRequerido = borrados ? false : true
 			if (seccion.activo != estadoRequerido) {
 				return false
 			}
@@ -92,8 +112,6 @@ export default function Secciones() {
 			return true
 		})
 
-		console.log(nuevasSeccionesFiltradas)
-
 		setSeccionesFiltradas(nuevasSeccionesFiltradas)
 	}, [
 		secciones,
@@ -104,76 +122,11 @@ export default function Secciones() {
 		borrados,
 	])
 
-	async function crearNuevaSeccion() {
-		const formData = new FormData()
-		formData.append('nombre', 'Nueva sección')
-
-		try {
-			setCreandoSeccion(true)
-
-			//const Fetch2 = async (url: string, options: FetchOptions = {}): Promise<Response> => {
-			//	const { token, restoreSession } = useAuthStore.getState()
-
-			//	const executeRequest = async (tokenToUse: string | null) => {
-			//		const headers: HeadersInit = {
-			//			...(options.headers || {}),
-			//			...(tokenToUse && { Authorization: tokenToUse }),
-			//			//'Content-Type': 'application/json',
-			//		}
-
-			//		return fetch(url, {
-			//			headers,
-			//			credentials: 'include',
-			//			...options,
-			//		})
-			//	}
-
-			//	try {
-			//		// Primera petición con el token actual
-			//		const response = await executeRequest(token)
-
-			//		// Si el token expiró (401), intentamos refrescarlo
-			//		if (response.status === 401) {
-			//			await restoreSession()
-			//			const newResponse = await executeRequest(token)
-
-			//			return newResponse
-			//		}
-
-			//		return response
-			//	} catch (error) {
-			//		console.error('Auth fetch error:', error)
-			//		throw error
-			//	}
-			//}
-
-			//TODO esto esta funcionando sin "Auth"
-			const query = await Fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/sections/create`,
-				{
-					method: 'post',
-					body: formData,
-				},
-				true,
-			)
-			//if (!query.ok) throw new Error('No se creo la nueva sección')
-
-			const response = await query.json()
-			if (response.seccion.seccion_id) {
-				navigate(`/secciones/${response.seccion.seccion_id}`)
-			}
-		} catch (error) {
-			console.log(error)
-		} finally {
-			setCreandoSeccion(false)
-		}
-	}
-
 	function handleInputSearch(e: React.ChangeEvent<HTMLInputElement>) {
 		if (!secciones) return
 
 		// NUEVO: Filtrar por estado activo primero
-		const estadoRequerido = borrados ? '0' : '1'
+		const estadoRequerido = borrados ? false : true
 		const seccionesPorEstado = secciones.filter(seccion => seccion.activo == estadoRequerido)
 
 		const nuevasSecciones = seccionesPorEstado.filter(seccion => {
@@ -195,9 +148,9 @@ export default function Secciones() {
 					<h1>Secciones</h1>
 
 					<button
-						onClick={() => crearNuevaSeccion()}
+						onClick={() => crearSeccion()}
 						className='btn-secondary'
-						disabled={creandoSeccion}
+						disabled={isPending}
 					>
 						<Plus />
 						Nueva sección
@@ -318,13 +271,13 @@ export default function Secciones() {
 				<div className='contenido-secciones'>
 					{seccionesFiltradas &&
 						seccionesFiltradas.map(seccion => (
-							<div key={seccion.seccion_id} className='seccion-individual'>
+							<div key={seccion.id} className='seccion-individual'>
 								<div className='imagen'>
-									<Link to={`/secciones/${seccion.seccion_id}`}>
+									<Link to={`/secciones/${seccion.id}`}>
 										{seccion.imagen_principal == '' ? (
-											<img src={`${backendUrl}/uploads/placeholder.jpg`} />
+											<img src={'../../../images/placeholder.jpg'} />
 										) : (
-											<img src={`${backendUrl}/uploads/${seccion.imagen_principal}`} />
+											<img src={pb.files.getURL(seccion, seccion.imagen_principal)} />
 										)}
 									</Link>
 								</div>

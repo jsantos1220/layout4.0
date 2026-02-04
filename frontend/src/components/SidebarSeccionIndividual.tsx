@@ -1,21 +1,22 @@
+import { UseMutateFunction } from '@tanstack/react-query'
 import Fetch from '@utils/Fetch'
 import { LoaderPinwheel, Save, Trash2 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router'
 
 type SidebarType = {
 	loading: boolean
-	handleUpdateSeccion: () => Promise<void>
+	handleUpdateSeccion: UseMutateFunction<void, Error, void, unknown>
 }
 
 export default function SidebarSeccionIndividual({ loading, handleUpdateSeccion }: SidebarType) {
-	const { seccion_id } = useParams()
+	const { id } = useParams()
 	const navigate = useNavigate()
 
 	async function handleSemiDelete() {
-		if (!seccion_id) return
+		if (!id) return
 
 		const formData = new FormData()
-		formData.set('seccion_id', seccion_id)
+		formData.set('id', id)
 		formData.set('activo', '0')
 
 		// Ejemplo de envío
@@ -37,6 +38,7 @@ export default function SidebarSeccionIndividual({ loading, handleUpdateSeccion 
 			console.log(error)
 		}
 	}
+
 	return (
 		<div className='controllers'>
 			<div className='container-controllers'>

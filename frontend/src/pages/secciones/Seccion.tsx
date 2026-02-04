@@ -1,8 +1,7 @@
 import SidebarSeccionIndividual from '@components/SidebarSeccionIndividual'
-import Fetch from '@utils/Fetch'
-import type { Seccion } from '@/index'
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import type { Seccion, SeccionUpdatePayload } from '@/index'
+import { useState } from 'react'
+import { useParams } from 'react-router'
 import CodeEditor from '@uiw/react-textarea-code-editor'
 import ImagenPrincipal from '@components/editar-seccion/ImagenPrincipal'
 import ImagenesVariables from '@components/editar-seccion/ImagenesVariables'
@@ -11,103 +10,136 @@ import SidebarCategorias from '@components/editar-seccion/SidebarCategorias'
 import SidebarOpciones from '@components/editar-seccion/SidebarOpciones'
 import TextoEditable from '@components/inputs/TextoEditable'
 import { useControlSave } from '@components/hooks/useControlSave'
+import { getSeccionById, updateSeccion } from '@/src/api/crudSecciones'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import Swal from 'sweetalert2'
 
 export default function Seccion() {
-	const { seccion_id } = useParams()
-	const navigate = useNavigate()
+	const { id } = useParams()
 	const [seccion, setSeccion] = useState<Seccion | undefined>()
 	const [nuevaImagenPrincipal, setNuevaImagenPrincipal] = useState<File | undefined>()
 	const [nuevaImagenAmarilla, setNuevaImagenAmarilla] = useState<File | undefined>()
 	const [nuevaImagenVerde, setNuevaImagenVerde] = useState<File | undefined>()
 	const [nuevaImagenRoja, setNuevaImagenRoja] = useState<File | undefined>()
-	const [loading, setLoading] = useState<boolean>(false)
 	const [titulo, setTitulo] = useState<string>('')
+	const queryClient = useQueryClient()
 
-	useEffect(() => {
-		buscarSeccion()
-	}, [])
+	const {
+		//data,
+		//error: errorQuery,
+		//isLoading,
+	} = useQuery({
+		queryKey: ['secciones', id],
+		queryFn: async () => {
+			const data = await getSeccionById(id)
+			setSeccion(data)
+			setTitulo(data.nombre)
 
-	//Guardar con control + s
-	useControlSave(handleUpdateSeccion)
+			return data
+		},
+	})
 
-	async function buscarSeccion() {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sections/${seccion_id}`)
-			const response = await query.json()
+	const { mutate: guardarSeccion, isPending } = useMutation({
+		mutationFn: async () => {
+			if (!seccion) return
 
-			if (typeof response.section == 'object') {
-				setSeccion(response.section)
-				setTitulo(response.section.nombre)
-			} else {
-				console.log('No esta encontrando el proyecto')
-				navigate('/secciones')
+			const payload: SeccionUpdatePayload = {
+				nombre: seccion.nombre || '',
+				imagen_background: seccion.imagen_background || false,
+				codigo: seccion.codigo || '',
+				titulo: seccion.titulo || false,
+				subtitulo: seccion.subtitulo || false,
+				descripcion: seccion.descripcion || false,
+				cta: seccion.cta || false,
+				items: seccion.items || 0,
+				liked: seccion.liked || false,
+				activo: seccion.activo || true,
 			}
-		} catch (error) {
-			navigate('/secciones')
-			console.log(error)
-		}
-	}
 
-	async function handleUpdateSeccion() {
-		if (!seccion) return
+			// Solo agrega imágenes si hay nuevas
+			if (nuevaImagenPrincipal) payload.imagen_principal = nuevaImagenPrincipal
+			if (nuevaImagenAmarilla) payload.imagen_amarilla = nuevaImagenAmarilla
+			if (nuevaImagenVerde) payload.imagen_verde = nuevaImagenVerde
+			if (nuevaImagenRoja) payload.imagen_roja = nuevaImagenRoja
 
-		/* 
-         Donde me quede? hay que ver klk con el type de las imagenes
-         que es lo que estamos guardando si es un string o un File
-         Luego hay que hacer una petición de prueba a ver si se crea 
-         la sección, despues hay que poner todo esto a funcionar con 
-         react query y poner a funcionar todo lo demás, gracias
-      
-      */
+			console.log(payload)
 
-		const payload: Partial<Seccion> = {
-			nombre: titulo,
-			activo: true,
-		}
-
-		// Solo agrega imágenes si hay nuevas
-		if (nuevaImagenPrincipal) payload.imagen_principal = nuevaImagenPrincipal
-		if (nuevaImagenAmarilla) payload.imagen_amarilla = nuevaImagenAmarilla
-		if (nuevaImagenVerde) payload.imagen_verde = nuevaImagenVerde
-		if (nuevaImagenRoja) payload.imagen_roja = nuevaImagenRoja
-
-		// Ejemplo de envío
-		try {
-			setLoading(true)
-
-			const response = await Fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/sections/update`,
-				{
-					method: 'POST', // o 'PUT' según tu API
-					body: formData,
-				},
-				true,
-			)
-			//const data = await response.json()
-
-			if (!response.ok) throw new Error()
-
-			// Refresca la sección después de un update exitoso
-			await buscarSeccion()
+			await updateSeccion(seccion.id, payload)
 
 			//Limpiar las imagenes
 			setNuevaImagenPrincipal(undefined)
 			setNuevaImagenAmarilla(undefined)
 			setNuevaImagenVerde(undefined)
 			setNuevaImagenRoja(undefined)
-		} catch (error) {
-			console.log(error)
-			// Maneja el error aquí
-		} finally {
-			setLoading(false)
-		}
-	}
+		},
+		onSuccess: () => {
+			//console.log(data)
+			Swal.fire({
+				title: 'Sección actualizada',
+				icon: 'success',
+				showConfirmButton: false,
+				timer: 1500,
+				timerProgressBar: true,
+			}).then(() => {
+				//navigate(`/facturas/${data.id}`);
+			})
+			queryClient.invalidateQueries({ queryKey: ['secciones', id] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al actualizar la sección',
+				text: error.message,
+				icon: 'error',
+			})
+		},
+	})
+
+	//Guardar con control + s
+	useControlSave(guardarSeccion)
+
+	//async function handleUpdateSeccion() {
+	//	if (!seccion) return
+
+	//	const payload = {
+	//		nombre: titulo,
+	//		activo: true,
+	//		imagen_principal: null,
+	//		imagen_amarilla: null,
+	//		imagen_verde: null,
+	//		imagen_roja: null,
+	//	}
+
+	//	// Solo agrega imágenes si hay nuevas
+	//	if (nuevaImagenPrincipal) payload.imagen_principal = nuevaImagenPrincipal
+	//	if (nuevaImagenAmarilla) payload.imagen_amarilla = nuevaImagenAmarilla
+	//	if (nuevaImagenVerde) payload.imagen_verde = nuevaImagenVerde
+	//	if (nuevaImagenRoja) payload.imagen_roja = nuevaImagenRoja
+
+	//	// Ejemplo de envío
+	//	try {
+	//		await updateSeccion(seccion.id, payload)
+	//		//const data = await response.json()
+
+	//		// Refresca la sección después de un update exitoso
+	//		await buscarSeccion()
+
+	//		//Limpiar las imagenes
+	//		setNuevaImagenPrincipal(undefined)
+	//		setNuevaImagenAmarilla(undefined)
+	//		setNuevaImagenVerde(undefined)
+	//		setNuevaImagenRoja(undefined)
+	//	} catch (error) {
+	//		console.log(error)
+	//		// Maneja el error aquí
+	//	} finally {
+	//	}
+	//}
 
 	return (
 		<div className=''>
 			<div className='header margin-bottom-s'>
 				<h1 className='flex-row items-middle flex-wrap gap-2xs'>
-					{seccion?.activo == '0' && <div className='estado-borrado'></div>}
+					{seccion?.activo == false && <div className='estado-borrado'></div>}
 					<TextoEditable texto={titulo} setTexto={setTitulo} size={34} />
 				</h1>
 			</div>
@@ -181,10 +213,7 @@ export default function Seccion() {
 				</div>
 
 				<div className='columna-3'>
-					<SidebarSeccionIndividual
-						loading={loading}
-						handleUpdateSeccion={handleUpdateSeccion}
-					/>
+					<SidebarSeccionIndividual loading={isPending} handleUpdateSeccion={guardarSeccion} />
 				</div>
 			</div>
 		</div>

@@ -39,20 +39,29 @@ export type Seccion = {
 	imagen_amarilla?: string
 	imagen_roja?: string
 	imagen_verde?: string
-	imagen_background?: number
+	imagen_background?: boolean
 	codigo?: string
-	titulo?: number
-	subtitulo?: number
-	descripcion?: number
-	cta?: number
+	titulo?: boolean
+	subtitulo?: boolean
+	descripcion?: boolean
+	cta?: boolean
 	items?: number
-	liked?: number
+	liked?: boolean
 	categorias?: Categoria[]
 	opciones?: Opcion[]
 	draggable_id?: string
-	activo?: string
+	activo?: boolean
 	created?: string | number
 	updated?: string | number
+}
+
+type SeccionUpdatePayload = Partial<
+	Omit<Seccion, 'imagen_principal' | 'imagen_amarilla' | 'imagen_verde' | 'imagen_roja'>
+> & {
+	imagen_principal?: File | string
+	imagen_amarilla?: File | string
+	imagen_verde?: File | string
+	imagen_roja?: File | string
 }
 
 export type Categoria = {

@@ -1,6 +1,6 @@
 import useAuthStore from '@context/useAuthContext'
 import pb from '@lib/pocketbase'
-import { Seccion } from '@/index'
+import { Seccion, SeccionUpdatePayload } from '@/index'
 
 //Obtener registro por ID
 export async function getSeccionById(id: string): Promise<Seccion | undefined> {
@@ -21,8 +21,8 @@ export async function getAllSecciones(): Promise<Seccion[] | undefined> {
 			//sort: 'created',
 			//filter: 'en_papelera != true',
 			//TODO: esto hay que limitarlo si lo va a usar mas gente
-			//fields:
-			//	'id, comprobante, cliente, fecha, total, termino_pago, estatus, en_papelera, created',
+			fields:
+				'id, imagen_principal, nombre, updated, usuario, activo, collectionName, collectionId, created',
 		})
 
 		return records
@@ -33,26 +33,26 @@ export async function getAllSecciones(): Promise<Seccion[] | undefined> {
 }
 
 //Crear nueva registro
-export async function createSeccion(seccion: Partial<Seccion>): Promise<Seccion | undefined> {
+export async function createSeccion(): Promise<Seccion | undefined> {
 	const user = useAuthStore.getState().user
 
 	try {
 		const data = {
 			usuario: user.id,
-			nombre: seccion.nombre || '',
-			imagen_principal: seccion.imagen_principal || '',
-			imagen_amarilla: seccion.imagen_amarilla || '',
-			imagen_roja: seccion.imagen_roja || '',
-			imagen_verde: seccion.imagen_verde || '',
-			imagen_background: seccion.imagen_background || false,
-			codigo: seccion.codigo || '',
-			liked: seccion.liked || false,
-			titulo: seccion.titulo || false,
-			subtitulo: seccion.subtitulo || false,
-			descripcion: seccion.descripcion || false,
-			cta: seccion.cta || false,
-			items: seccion.items || 0,
-			activo: seccion.activo || true,
+			nombre: 'Nueva sección',
+			imagen_principal: '',
+			imagen_amarilla: '',
+			imagen_roja: '',
+			imagen_verde: '',
+			imagen_background: false,
+			codigo: '',
+			liked: false,
+			titulo: false,
+			subtitulo: false,
+			descripcion: false,
+			cta: false,
+			items: 0,
+			activo: true,
 		}
 
 		const record = await pb.collection('secciones').create<Seccion>(data)
@@ -67,18 +67,23 @@ export async function createSeccion(seccion: Partial<Seccion>): Promise<Seccion 
 //Actualizar registro por ID
 export async function updateSeccion(
 	id: string,
-	seccion: Partial<Seccion>,
+	seccion: SeccionUpdatePayload,
 ): Promise<Seccion | undefined> {
 	try {
 		const formData = new FormData()
 
 		// Campos normales
-		if (seccion.nombre !== undefined) formData.append('nombre', seccion.nombre)
-		if (seccion.codigo !== undefined) formData.append('codigo', seccion.codigo)
-		if (seccion.liked !== undefined) formData.append('liked', String(seccion.liked))
-		if (seccion.activo !== undefined) formData.append('activo', String(seccion.activo))
-		if (seccion.imagen_background)
-			formData.append('imagen_background', String(seccion.imagen_background))
+		formData.append('nombre', seccion.nombre)
+		formData.append('codigo', seccion.codigo)
+		formData.append('liked', String(seccion.liked))
+		formData.append('imagen_background', String(seccion.imagen_background))
+		formData.append('titulo', String(seccion.titulo))
+		formData.append('subtitulo', String(seccion.subtitulo))
+		formData.append('descripcion', String(seccion.descripcion))
+		formData.append('cta', String(seccion.cta))
+		formData.append('items', String(seccion.items))
+		formData.append('liked', String(seccion.liked))
+		formData.append('activo', String(seccion.activo))
 
 		// Imágenes (SOLO si existen)
 		if (seccion.imagen_principal) formData.append('imagen_principal', seccion.imagen_principal)

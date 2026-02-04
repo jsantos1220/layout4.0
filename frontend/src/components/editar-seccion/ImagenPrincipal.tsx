@@ -1,5 +1,6 @@
 import ImageFileInput from '@components/inputs/FileInput'
-import { Seccion } from 'index'
+import { Seccion } from '@/index'
+import pb from '@lib/pocketbase'
 
 type ImagenPrincipalType = {
 	seccion: Seccion | undefined
@@ -12,19 +13,17 @@ export default function ImagenPrincipal({
 	nuevaImagenPrincipal,
 	setNuevaImagenPrincipal,
 }: ImagenPrincipalType) {
-	const backendUrl = import.meta.env.VITE_BACKEND_URL
+	const imagen_principal = pb.files.getURL(seccion, seccion?.imagen_principal)
+	const placeholder = '../../../images/placeholder.jpg'
 
 	return (
 		<div className='cotenido-panel'>
 			<div className='contenedor-imagen'>
 				{seccion?.imagen_principal == '' ? (
-					<img
-						src={backendUrl + '/uploads/placeholder.jpg'}
-						alt='Imagen principal'
-					/>
+					<img src={placeholder} alt='Imagen principal' />
 				) : (
 					<img
-						src={backendUrl + '/uploads/' + seccion?.imagen_principal}
+						src={imagen_principal == '' ? placeholder : imagen_principal}
 						alt='Imagen principal'
 					/>
 				)}

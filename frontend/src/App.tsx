@@ -49,7 +49,7 @@ export default function App() {
 							<Route path='/proyectos/nuevo' element={<NuevoProyecto />} />
 
 							<Route path='/secciones' element={<Secciones />} />
-							<Route path='/secciones/:seccion_id' element={<Seccion />} />
+							<Route path='/secciones/:id' element={<Seccion />} />
 							<Route path='/categorias' element={<Categorias />} />
 							<Route path='/opciones' element={<Opciones />} />
 
