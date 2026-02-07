@@ -1,43 +1,72 @@
-import { UseMutateFunction } from '@tanstack/react-query'
-import Fetch from '@utils/Fetch'
-import { LoaderPinwheel, Save, Trash2 } from 'lucide-react'
+import { UseMutateFunction, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Eye, LoaderPinwheel, Save, Trash2 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router'
+import Swal from 'sweetalert2'
+import { activateSeccion, deactivateSeccion } from '../api/crudSecciones'
+import { Seccion } from '@/index'
 
 type SidebarType = {
 	loading: boolean
 	handleUpdateSeccion: UseMutateFunction<void, Error, void, unknown>
+	seccion: Seccion
 }
 
-export default function SidebarSeccionIndividual({ loading, handleUpdateSeccion }: SidebarType) {
+export default function SidebarSeccionIndividual({
+	loading,
+	handleUpdateSeccion,
+	seccion,
+}: SidebarType) {
 	const { id } = useParams()
 	const navigate = useNavigate()
+	const queryClient = useQueryClient()
 
-	async function handleSemiDelete() {
-		if (!id) return
+	const { mutate: handleSemiDelete } = useMutation({
+		mutationFn: async () => await deactivateSeccion(id),
+		onSuccess: data => {
+			console.log(data)
+			Swal.fire({
+				title: 'Sección borrada',
+				icon: 'success',
+				showConfirmButton: false,
+				timer: 500,
+				timerProgressBar: true,
+			}).then(() => {
+				navigate('/secciones/')
+			})
+			queryClient.invalidateQueries({ queryKey: ['secciones', id] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al desactivar la sección',
+				text: error.message,
+				icon: 'error',
+			})
+		},
+	})
 
-		const formData = new FormData()
-		formData.set('id', id)
-		formData.set('activo', '0')
-
-		// Ejemplo de envío
-		try {
-			//TODO esto esta funcionando si "Auth"
-			const query = await Fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/sections/update`,
-				{
-					method: 'POST', // o 'PUT' según tu API
-					body: formData,
-				},
-				true,
-			)
-
-			if (!query.ok) throw new Error('No se pudo borrar')
-
-			navigate('/secciones/')
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	const { mutate: handleActivate } = useMutation({
+		mutationFn: async () => await activateSeccion(id),
+		onSuccess: data => {
+			console.log(data)
+			Swal.fire({
+				title: 'Sección borrada',
+				icon: 'success',
+				showConfirmButton: false,
+				timer: 500,
+				timerProgressBar: true,
+			}).then(() => {
+				//navigate('/secciones/')
+			})
+			queryClient.invalidateQueries({ queryKey: ['secciones', id] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al desactivar la sección',
+				text: error.message,
+				icon: 'error',
+			})
+		},
+	})
 
 	return (
 		<div className='controllers'>
@@ -53,10 +82,17 @@ export default function SidebarSeccionIndividual({ loading, handleUpdateSeccion 
 			</div>
 
 			<div className='container-controllers'>
-				<button onClick={handleSemiDelete}>
-					<Trash2 />
-					Borrar
-				</button>
+				{seccion?.activo == true ? (
+					<button onClick={() => handleSemiDelete()}>
+						<Trash2 />
+						Borrar
+					</button>
+				) : (
+					<button onClick={() => handleActivate()}>
+						<Eye />
+						Activar
+					</button>
+				)}
 			</div>
 		</div>
 	)

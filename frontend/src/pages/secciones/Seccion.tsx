@@ -168,7 +168,11 @@ export default function Seccion() {
 				</div>
 
 				<div className='columna-3'>
-					<SidebarSeccionIndividual loading={isPending} handleUpdateSeccion={guardarSeccion} />
+					<SidebarSeccionIndividual
+						loading={isPending}
+						handleUpdateSeccion={guardarSeccion}
+						seccion={seccion}
+					/>
 				</div>
 			</div>
 		</div>
