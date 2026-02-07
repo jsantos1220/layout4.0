@@ -17,6 +17,28 @@ export async function getCategoriaSeccionById(
 }
 
 //Obtener todos los registros
+export async function getAllCategoriaSeccionesById(
+	id: string,
+): Promise<Categorias_secciones[] | undefined> {
+	try {
+		const records = await pb
+			.collection('categorias_secciones')
+			.getFullList<Categorias_secciones>({
+				//sort: 'created',
+				filter: `seccion = '${id}'`,
+				expand: 'categoria',
+				//fields:
+				//	'id, comprobante, cliente, fecha, total, termino_pago, estatus, en_papelera, created',
+			})
+
+		return records
+	} catch (error) {
+		//console.log(error)
+		throw error
+	}
+}
+
+//Obtener todos los registros
 export async function getAllCategoriaSecciones(): Promise<Categorias_secciones[] | undefined> {
 	try {
 		const records = await pb

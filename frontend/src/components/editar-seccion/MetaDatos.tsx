@@ -24,7 +24,7 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 							return { ...seccion, imagen_background }
 						})
 					}
-					checked={seccion?.imagen_background}
+					checked={seccion?.imagen_background ?? false}
 				/>
 			</div>
 
@@ -43,7 +43,7 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 							return { ...seccion, titulo }
 						})
 					}
-					checked={seccion?.titulo}
+					checked={seccion?.titulo ?? false}
 				/>
 			</div>
 
@@ -62,7 +62,7 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 							return { ...seccion, subtitulo }
 						})
 					}
-					checked={seccion?.subtitulo}
+					checked={seccion?.subtitulo ?? false}
 				/>
 			</div>
 
@@ -81,7 +81,7 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 							return { ...seccion, descripcion }
 						})
 					}
-					checked={seccion?.descripcion}
+					checked={seccion?.descripcion ?? false}
 				/>
 			</div>
 
@@ -100,7 +100,7 @@ export default function MetaDatos({ seccion, setSeccion }: MetadatosType) {
 							return { ...seccion, cta }
 						})
 					}
-					checked={seccion?.cta}
+					checked={seccion?.cta ?? false}
 				/>
 			</div>
 

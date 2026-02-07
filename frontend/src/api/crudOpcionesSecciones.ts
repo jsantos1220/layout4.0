@@ -15,6 +15,27 @@ export async function getOpcionSeccionById(id: string): Promise<Opciones_seccion
 }
 
 //Obtener todos los registros
+export async function getAllOpcionesSeccionesById(
+	id: string,
+): Promise<Opciones_secciones[] | undefined> {
+	try {
+		const records = await pb.collection('opciones_secciones').getFullList<Opciones_secciones>({
+			//sort: 'created',
+			filter: `seccion = '${id}'`,
+			expand: 'opcion',
+			//TODO: esto hay que limitarlo si lo va a usar mas gente
+			//fields:
+			//	'id, comprobante, cliente, fecha, total, termino_pago, estatus, en_papelera, created',
+		})
+
+		return records
+	} catch (error) {
+		//console.log(error)
+		throw error
+	}
+}
+
+//Obtener todos los registros
 export async function getAllOpcionesSecciones(): Promise<Opciones_secciones[] | undefined> {
 	try {
 		const records = await pb.collection('opciones_secciones').getFullList<Opciones_secciones>({

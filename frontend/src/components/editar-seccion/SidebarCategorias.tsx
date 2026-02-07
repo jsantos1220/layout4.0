@@ -3,124 +3,102 @@ import { Categoria } from '@/index'
 import { Check } from 'lucide-react'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
-import { useCallback, useEffect, useState } from 'react'
-import Fetch from '@utils/Fetch'
+import { useCallback, useState } from 'react'
 import debounce from '@utils/debounce'
+import { createCategoria, getAllCategorias } from '@/src/api/crudCategorias'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+	createCategoriaSeccion,
+	getAllCategoriaSeccionesById,
+} from '@/src/api/crudCategoriaSecciones'
+import pb from '@lib/pocketbase'
+import Swal from 'sweetalert2'
+import { Notyf } from 'notyf'
+import 'notyf/notyf.min.css'
 
 const icon = <CheckBoxOutlineBlankIcon fontSize='small' />
 const checkedIcon = <CheckBoxIcon fontSize='small' />
 
-export default function SidebarCategorias({ seccion_id }: { seccion_id: string | undefined }) {
+export default function SidebarCategorias({ id }: { id: string | undefined }) {
 	const [categoriasGral, setCategoriasGenerales] = useState<Categoria[] | undefined>()
 	const [categoriasFinales, setCategoriasFinales] = useState<Categoria[] | undefined>([])
 	const [addNew, setAddNew] = useState(false)
 	const [newCategory, setNewCategory] = useState<string>('')
-	const [error, setError] = useState(false)
+	const queryClient = useQueryClient()
+	const notyf = new Notyf()
 
 	//Buscar todas las categorias
-	useEffect(() => {
-		if (!seccion_id) return
+	useQuery({
+		queryKey: ['categorias'],
+		queryFn: async () => {
+			const categorias = await getAllCategorias()
+			setCategoriasGenerales(categorias)
 
-		async function buscarCategoriasGenerales() {
-			try {
-				const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/`)
-				const response = await query.json()
+			return categorias
+		},
+	})
 
-				setCategoriasGenerales(response.categorias)
-			} catch (error) {
-				console.log(error)
-			}
-		}
+	//Buscar las categorias relacionadas
+	useQuery({
+		queryKey: ['categorias-secciones', id],
+		enabled: !!id,
+		queryFn: async () => {
+			const relaciones = await getAllCategoriaSeccionesById(id)
+			const categoriassFinales = []
 
-		//buscarCategoriasGenerales()
-	}, [seccion_id])
+			relaciones.forEach(relacion => {
+				categoriassFinales.push(relacion.expand.categoria)
+			})
+			setCategoriasFinales(categoriassFinales)
+			return relaciones
+		},
+	})
 
-	//Buscar categorías que ya se asosia con este recurso
-	useEffect(() => {
-		if (!seccion_id || !categoriasGral) return
-
-		async function fetchFinales() {
-			try {
-				const query = await Fetch(
-					`${import.meta.env.VITE_BACKEND_URL}/api/categorias-secciones/all/${seccion_id}`,
-				)
-				const response = await query.json()
-				const finales = response.categorias
-					.map((catFinal: Categoria) => categoriasGral?.find(cat => cat.id === catFinal.id))
-					.filter(Boolean) as Categoria[]
-				setCategoriasFinales(finales)
-			} catch (error) {
-				console.log(error)
-			}
-		}
-
-		//fetchFinales()
-	}, [seccion_id, categoriasGral])
-
-	//Se ejecuta cuando se actualizan las categorias finales
-	useEffect(() => {}, [categoriasFinales])
-
-	//Esta función borra y crea las conexiones de categorias y secciones
-	async function actualizarCategoriasEnSeccion(categorias: Categoria[]) {
-		try {
-			const query = await Fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/categorias-secciones/update-multiple/`,
-				{
-					method: 'post',
-					body: JSON.stringify({ seccion_id, categorias }),
-				},
-			)
-
-			if (query.ok) {
-				console.log('Si se actualiazaron las categorias')
-			} else {
-				console.log('No se actualiazaron las categorias')
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	const { mutate: actualizarCategoriasEnSeccion } = useMutation({
+		mutationFn: async (categorias: Categoria[]) => {
+			return await pb.send('/api/update-categorias-seccion', {
+				method: 'POST',
+				body: JSON.stringify({ id, categorias }),
+			})
+		},
+		onSuccess: () => {
+			notyf.success('Guardado')
+			queryClient.invalidateQueries({ queryKey: ['categorias-secciones'] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al crear factura',
+				text: error.message,
+				icon: 'error',
+			})
+		},
+	})
 
 	//Esta función se dispara esperando 3 segundos para actualizar despacio
 	const debouncedActualizarCategorias = useCallback(
-		debounce((categorias: Categoria[]) => actualizarCategoriasEnSeccion(categorias), 2000),
-		[seccion_id],
+		debounce((categorias: Categoria[]) => actualizarCategoriasEnSeccion(categorias), 1500),
+		[id],
 	)
 
-	async function handleNewCategory() {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/create/`, {
-				method: 'post',
-				body: JSON.stringify({ nombre: newCategory }),
+	const { mutate: handleNewCategory, isPending } = useMutation({
+		mutationFn: async () => {
+			const nuevaCategoria = await createCategoria(newCategory)
+			if (nuevaCategoria) await createCategoriaSeccion(nuevaCategoria.id, id)
+			setNewCategory('')
+			setAddNew(false)
+		},
+		onSuccess: () => {
+			notyf.success('Categoría creada')
+			queryClient.invalidateQueries({ queryKey: ['categorias-secciones'] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al crear la categoria',
+				text: error.message,
+				icon: 'error',
 			})
-
-			const response = await query.json()
-			const nuevaCategoria = response.categoria
-
-			if (query.ok) {
-				setCategoriasFinales(categorias => {
-					const categoriasNuevas = [...(categorias || []), nuevaCategoria]
-
-					//agregar la nueva categoria en la db
-					actualizarCategoriasEnSeccion(categoriasNuevas)
-
-					//Actualizar el estado
-					return categoriasNuevas
-				})
-
-				setNewCategory('')
-				setAddNew(false)
-			}
-
-			if (!query.ok) {
-				setError(true)
-
-				setTimeout(() => setError(false), 1200)
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
+		},
+	})
 
 	return (
 		<div className='cotenido-panel'>
@@ -131,6 +109,7 @@ export default function SidebarCategorias({ seccion_id }: { seccion_id: string |
 					options={categoriasGral || []}
 					disableCloseOnSelect
 					getOptionLabel={option => option.nombre}
+					isOptionEqualToValue={(option, value) => option.id === value.id}
 					value={categoriasFinales}
 					onChange={(_e, value) => {
 						setCategoriasFinales(value)
@@ -169,9 +148,7 @@ export default function SidebarCategorias({ seccion_id }: { seccion_id: string |
 							onChange={e => setNewCategory(e.target.value)}
 						/>
 
-						{error && <p className='error'>No se agrego la categoría</p>}
-
-						<button onClick={handleNewCategory}>
+						<button onClick={() => handleNewCategory()} disabled={isPending}>
 							<Check />
 							Agregar categoría
 						</button>

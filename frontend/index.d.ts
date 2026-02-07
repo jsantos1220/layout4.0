@@ -108,27 +108,39 @@ export type Plantilla = {
 
 export type Categorias_secciones = {
 	id: string
-	categoria_id: string
-	seccion_id: string
-	user_id: string
+	categoria: string
+	seccion: string
+	usuario: string
+	expand?: {
+		categoria?: Categoria
+		seccion?: Seccion
+	}
 	created: string
 	updated: string
 }
 
 export type Opciones_secciones = {
 	id: string
-	opcion_id: string
-	seccion_id: string
-	user_id: string
+	opcion: string
+	seccion: string
+	usuario: string
+	expand?: {
+		opcion?: Opcion
+		seccion?: Seccion
+	}
 	created: string
 	updated: string
 }
 
 export type Paginas_secciones = {
 	id: string
-	opcion_id: string
-	seccion_id: string
-	user_id: string
+	pagina: string
+	seccion: string
+	usuario: string
+	expand?: {
+		pagina?: Pagina
+		seccion?: Seccion
+	}
 	created: string
 	updated: string
 }

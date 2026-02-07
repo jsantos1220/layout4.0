@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router'
 import CodeEditor from '@uiw/react-textarea-code-editor'
 import ImagenPrincipal from '@components/editar-seccion/ImagenPrincipal'
-import ImagenesVariables from '@components/editar-seccion/ImagenesVariables'
+//import ImagenesVariables from '@components/editar-seccion/ImagenesVariables'
 import MetaDatos from '@components/editar-seccion/MetaDatos'
 import SidebarCategorias from '@components/editar-seccion/SidebarCategorias'
 import SidebarOpciones from '@components/editar-seccion/SidebarOpciones'
@@ -21,19 +21,15 @@ export default function Seccion() {
 	const [nuevaImagenAmarilla, setNuevaImagenAmarilla] = useState<File | undefined>()
 	const [nuevaImagenVerde, setNuevaImagenVerde] = useState<File | undefined>()
 	const [nuevaImagenRoja, setNuevaImagenRoja] = useState<File | undefined>()
-	const [titulo, setTitulo] = useState<string>('')
+	const [nombre, setNombre] = useState<string>('')
 	const queryClient = useQueryClient()
 
-	const {
-		//data,
-		//error: errorQuery,
-		//isLoading,
-	} = useQuery({
+	useQuery({
 		queryKey: ['secciones', id],
 		queryFn: async () => {
 			const data = await getSeccionById(id)
 			setSeccion(data)
-			setTitulo(data.nombre)
+			setNombre(data.nombre)
 
 			return data
 		},
@@ -44,7 +40,7 @@ export default function Seccion() {
 			if (!seccion) return
 
 			const payload: SeccionUpdatePayload = {
-				nombre: seccion.nombre || '',
+				nombre: nombre || '',
 				imagen_background: seccion.imagen_background || false,
 				codigo: seccion.codigo || '',
 				titulo: seccion.titulo || false,
@@ -62,8 +58,6 @@ export default function Seccion() {
 			if (nuevaImagenVerde) payload.imagen_verde = nuevaImagenVerde
 			if (nuevaImagenRoja) payload.imagen_roja = nuevaImagenRoja
 
-			console.log(payload)
-
 			await updateSeccion(seccion.id, payload)
 
 			//Limpiar las imagenes
@@ -73,7 +67,6 @@ export default function Seccion() {
 			setNuevaImagenRoja(undefined)
 		},
 		onSuccess: () => {
-			//console.log(data)
 			Swal.fire({
 				title: 'Sección actualizada',
 				icon: 'success',
@@ -97,50 +90,12 @@ export default function Seccion() {
 	//Guardar con control + s
 	useControlSave(guardarSeccion)
 
-	//async function handleUpdateSeccion() {
-	//	if (!seccion) return
-
-	//	const payload = {
-	//		nombre: titulo,
-	//		activo: true,
-	//		imagen_principal: null,
-	//		imagen_amarilla: null,
-	//		imagen_verde: null,
-	//		imagen_roja: null,
-	//	}
-
-	//	// Solo agrega imágenes si hay nuevas
-	//	if (nuevaImagenPrincipal) payload.imagen_principal = nuevaImagenPrincipal
-	//	if (nuevaImagenAmarilla) payload.imagen_amarilla = nuevaImagenAmarilla
-	//	if (nuevaImagenVerde) payload.imagen_verde = nuevaImagenVerde
-	//	if (nuevaImagenRoja) payload.imagen_roja = nuevaImagenRoja
-
-	//	// Ejemplo de envío
-	//	try {
-	//		await updateSeccion(seccion.id, payload)
-	//		//const data = await response.json()
-
-	//		// Refresca la sección después de un update exitoso
-	//		await buscarSeccion()
-
-	//		//Limpiar las imagenes
-	//		setNuevaImagenPrincipal(undefined)
-	//		setNuevaImagenAmarilla(undefined)
-	//		setNuevaImagenVerde(undefined)
-	//		setNuevaImagenRoja(undefined)
-	//	} catch (error) {
-	//		console.log(error)
-	//		// Maneja el error aquí
-	//	} finally {
-	//	}
-	//}
-
 	return (
 		<div className=''>
 			<div className='header margin-bottom-s'>
 				<h1 className='flex-row items-middle flex-wrap gap-2xs'>
 					{seccion?.activo == false && <div className='estado-borrado'></div>}
-					<TextoEditable texto={titulo} setTexto={setTitulo} size={34} />
+					<TextoEditable texto={nombre} setTexto={setNombre} size={34} />
 				</h1>
 			</div>
 
@@ -156,7 +111,7 @@ export default function Seccion() {
 						/>
 					</div>
 
-					<div className='panel-blanco'>
+					{/*<div className='panel-blanco'>
 						<div className='titulo'>Variaciones de imagenes</div>
 
 						<ImagenesVariables
@@ -168,7 +123,7 @@ export default function Seccion() {
 							nuevaImagenVerde={nuevaImagenVerde}
 							setNuevaImagenVerde={setNuevaImagenVerde}
 						/>
-					</div>
+					</div>*/}
 
 					<div className='panel-blanco'>
 						<div className='titulo'>Código de Bricks</div>
@@ -202,13 +157,13 @@ export default function Seccion() {
 					<div className='panel-blanco'>
 						<div className='titulo'>Categorías</div>
 
-						<SidebarCategorias seccion_id={seccion?.id} />
+						<SidebarCategorias id={seccion?.id} />
 					</div>
 
 					<div className='panel-blanco'>
 						<div className='titulo'>Opciones</div>
 
-						<SidebarOpciones seccion_id={seccion?.id} />
+						<SidebarOpciones id={seccion?.id} />
 					</div>
 				</div>
 

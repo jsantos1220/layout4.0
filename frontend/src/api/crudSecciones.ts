@@ -100,6 +100,46 @@ export async function updateSeccion(
 	}
 }
 
+//Actualizar registro por ID
+export async function deactivateSeccion(
+	id: string,
+	seccion: SeccionUpdatePayload,
+): Promise<Seccion | undefined> {
+	try {
+		/* 
+         TODO: Esto simplemente debe poner "activo" a false, tambien hacer uno lo que ponga true
+      */
+
+		const formData = new FormData()
+
+		// Campos normales
+		formData.append('nombre', seccion.nombre)
+		formData.append('codigo', seccion.codigo)
+		formData.append('liked', String(seccion.liked))
+		formData.append('imagen_background', String(seccion.imagen_background))
+		formData.append('titulo', String(seccion.titulo))
+		formData.append('subtitulo', String(seccion.subtitulo))
+		formData.append('descripcion', String(seccion.descripcion))
+		formData.append('cta', String(seccion.cta))
+		formData.append('items', String(seccion.items))
+		formData.append('liked', String(seccion.liked))
+		formData.append('activo', String(seccion.activo))
+
+		// Imágenes (SOLO si existen)
+		if (seccion.imagen_principal) formData.append('imagen_principal', seccion.imagen_principal)
+		if (seccion.imagen_amarilla) formData.append('imagen_amarilla', seccion.imagen_amarilla)
+		if (seccion.imagen_roja) formData.append('imagen_roja', seccion.imagen_roja)
+		if (seccion.imagen_verde) formData.append('imagen_verde', seccion.imagen_verde)
+
+		const record = await pb.collection('secciones').update<Seccion>(id, formData)
+
+		return record
+	} catch (error) {
+		//console.log(error)
+		throw error
+	}
+}
+
 //Eliminar registro por ID
 export async function deleteSeccion(id: string) {
 	try {
