@@ -45,7 +45,7 @@ export default function App() {
 							<Route path='/' element={<Home />} />
 
 							<Route path='/proyectos' element={<Proyectos />} />
-							<Route path='/proyectos/:proyecto_id' element={<Proyecto />} />
+							<Route path='/proyectos/:id' element={<Proyecto />} />
 							<Route path='/proyectos/nuevo' element={<NuevoProyecto />} />
 
 							<Route path='/secciones' element={<Secciones />} />
@@ -54,7 +54,7 @@ export default function App() {
 							<Route path='/opciones' element={<Opciones />} />
 
 							<Route path='/clientes' element={<Clientes />} />
-							<Route path='/clientes/:cliente_id' element={<Cliente />} />
+							<Route path='/clientes/:id' element={<Cliente />} />
 
 							<Route path='/plantillas' element={<Plantillas />} />
 						</Route>

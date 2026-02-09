@@ -21,8 +21,8 @@ export async function getAllSecciones(): Promise<Seccion[] | undefined> {
 			//sort: 'created',
 			//filter: 'en_papelera != true',
 			//TODO: esto hay que limitarlo si lo va a usar mas gente
-			fields:
-				'id, imagen_principal, nombre, updated, usuario, activo, collectionName, collectionId, created',
+			//fields:
+			//	'id, imagen_principal, nombre, updated, usuario, activo, collectionName, collectionId, created',
 		})
 
 		return records

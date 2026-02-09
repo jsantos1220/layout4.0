@@ -4,11 +4,12 @@ import SortableItem from './SortableItem'
 import { v4 as uuid } from 'uuid'
 import { useEffect, useState } from 'react'
 import useProjectContext from '@context/useProjectContext'
-import type { Bricks, BricksContent, GlobalClasses, Pagina, Seccion } from 'index'
+import type { Bricks, BricksContent, GlobalClasses, Pagina, Seccion } from '@/index'
 import TextoEditable from '@components/inputs/TextoEditable'
 import { ArrowBigLeft, ArrowBigRight, Copy, FileJson2, Trash2 } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import jsonToObject from '@utils/jsonToObject'
+import pb from '@lib/pocketbase'
 
 type PaginaIndividualType = {
 	id: string
@@ -18,35 +19,28 @@ type PaginaIndividualType = {
 	zoom: number
 }
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL
-
-export default function PaginaIndividual({
-	id,
-	secciones,
-	zoom,
-	pagina,
-}: PaginaIndividualType) {
+export default function PaginaIndividual({ id, secciones, zoom, pagina }: PaginaIndividualType) {
 	const { paginas, setPaginas } = useProjectContext()
 	const { setNodeRef } = useDroppable({ id })
 	const [nombre, setNombre] = useState(pagina.nombre)
 
 	const sortableItems =
 		secciones?.map(seccion => ({
-			id: seccion.seccion_id,
+			id: seccion.id,
 		})) || []
 
 	function handleDeletePagina() {
-		const newPages = paginas.filter(pagina => pagina.pagina_id !== id)
+		const newPages = paginas.filter(pagina => pagina.id !== id)
 		setPaginas(newPages)
 	}
 
 	function handleDeleteSection(draggable_id: string | undefined) {
 		const nuevasSecciones = pagina.secciones?.filter(
-			seccion => seccion.draggable_id !== draggable_id
+			seccion => seccion.draggable_id !== draggable_id,
 		)
 
 		const paginasActualizadas = paginas.map(pagina => {
-			if (pagina.pagina_id !== id) return pagina
+			if (pagina.id !== id) return pagina
 
 			return {
 				...pagina,
@@ -71,7 +65,7 @@ export default function PaginaIndividual({
 		}
 
 		const paginaActualizada = paginas.map(p => {
-			if (p.pagina_id == pagina.pagina_id) {
+			if (p.id == pagina.id) {
 				return newPage
 			}
 
@@ -86,7 +80,7 @@ export default function PaginaIndividual({
 
 		const nuevaPagina: Pagina = {
 			...pagina,
-			pagina_id: uuidv4(),
+			id: uuidv4(),
 			nombre: 'Nueva pagina',
 			secciones: pagina.secciones?.map(seccion => {
 				return {
@@ -100,7 +94,7 @@ export default function PaginaIndividual({
 	}
 
 	function handleMoveLeft() {
-		const index = paginas.findIndex(p => p.pagina_id === id)
+		const index = paginas.findIndex(p => p.id === id)
 
 		if (index > 0) {
 			const nuevasPaginas = [...paginas]
@@ -112,7 +106,7 @@ export default function PaginaIndividual({
 	}
 
 	function handleMoveRight() {
-		const index = paginas.findIndex(p => p.pagina_id === id)
+		const index = paginas.findIndex(p => p.id === id)
 		if (index < paginas.length - 1) {
 			const nuevasPaginas = [...paginas]
 			const temp = nuevasPaginas[index + 1]
@@ -158,7 +152,7 @@ export default function PaginaIndividual({
 
 	useEffect(() => {
 		const paginasActualizadas = paginas.map(pagina => {
-			if (pagina.pagina_id !== id) return pagina
+			if (pagina.id !== id) return pagina
 
 			return {
 				...pagina,
@@ -170,11 +164,7 @@ export default function PaginaIndividual({
 	}, [nombre])
 
 	return (
-		<SortableContext
-			id={id}
-			items={sortableItems}
-			strategy={verticalListSortingStrategy}
-		>
+		<SortableContext id={id} items={sortableItems} strategy={verticalListSortingStrategy}>
 			<div
 				className='pagina-sorteable'
 				ref={setNodeRef}
@@ -214,10 +204,10 @@ export default function PaginaIndividual({
 					secciones?.map(seccion => (
 						<div key={seccion.draggable_id} className='seccion-contenido'>
 							<SortableItem
-								id={seccion.draggable_id ?? seccion.seccion_id}
+								id={seccion.draggable_id ?? seccion.id}
 								key={seccion.draggable_id}
 							>
-								<img src={`${backendUrl}/uploads/${seccion.imagen_principal}`} />
+								<img src={pb.files.getURL(seccion, seccion?.imagen_principal)} />
 							</SortableItem>
 
 							<button
@@ -239,7 +229,7 @@ export default function PaginaIndividual({
 					<SortableItem id={uuid()}>
 						<div className='seccion-vacia'>
 							<div className='seccion-vacia-int'>
-								<img src={`http://localhost:3001/uploads/empty-page.png`} />
+								<img src={`../../../images/empty-page.png`} />
 							</div>
 						</div>
 					</SortableItem>

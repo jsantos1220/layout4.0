@@ -1,6 +1,6 @@
 import useAuthStore from '@context/useAuthContext'
 import pb from '@lib/pocketbase'
-import { Proyecto } from '@/index'
+import { Proyecto, ProyectoUpdatePayload } from '@/index'
 
 //Obtener registro por ID
 export async function getProyectoById(id: string): Promise<Proyecto | undefined> {
@@ -33,18 +33,14 @@ export async function getAllProyectos(): Promise<Proyecto[] | undefined> {
 }
 
 //Crear nueva registro
-export async function createProyecto(proyecto: Partial<Proyecto>): Promise<Proyecto | undefined> {
+export async function createProyecto(): Promise<Proyecto | undefined> {
 	const user = useAuthStore.getState().user
 
 	try {
 		const data = {
 			usuario: user.id,
-			nombre: proyecto.nombre || '',
-			codigo: proyecto.codigo || '',
-			paginas: proyecto.paginas || '',
-			imagen: proyecto.imagen || '',
-			contenido: proyecto.contenido || '',
-			activo: proyecto.activo || true,
+			nombre: 'Nuevo proyecto',
+			activo: true,
 		}
 
 		const record = await pb.collection('proyectos').create<Proyecto>(data)
@@ -57,21 +53,25 @@ export async function createProyecto(proyecto: Partial<Proyecto>): Promise<Proye
 }
 
 //Actualizar registro por ID
-export async function updatePagina(
+export async function updateProyecto(
 	id: string,
-	proyecto: Partial<Proyecto>,
+	proyecto: ProyectoUpdatePayload,
 ): Promise<Proyecto | undefined> {
 	try {
-		const data = {
-			nombre: proyecto.nombre || '',
-			codigo: proyecto.codigo || '',
-			paginas: proyecto.paginas || '',
-			imagen: proyecto.imagen || '',
-			contenido: proyecto.contenido || '',
-			activo: proyecto.activo || true,
-		}
+		const formData = new FormData()
 
-		const records = await pb.collection('proyectos').update<Proyecto>(id, data)
+		// Campos normales
+		formData.append('nombre', proyecto.nombre)
+		formData.append('codigo', proyecto.codigo)
+		formData.append('cliente', String(proyecto.cliente))
+		formData.append('activo', String(proyecto.activo))
+		formData.append('codigo', String(proyecto.codigo))
+		formData.append('contenido', String(proyecto.contenido))
+		formData.append('paginas', String(proyecto.paginas))
+
+		if (proyecto.imagen) formData.append('imagen', proyecto.imagen)
+
+		const records = await pb.collection('proyectos').update<Proyecto>(id, formData)
 
 		return records
 	} catch (error) {
@@ -81,7 +81,7 @@ export async function updatePagina(
 }
 
 //Eliminar registro por ID
-export async function deletePagina(id: string) {
+export async function deleteProyecto(id: string) {
 	try {
 		await pb.collection('proyectos').delete(id)
 

@@ -1,10 +1,10 @@
-import Fetch from '@utils/Fetch'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 
 import { Proyecto } from '@/index'
 import { ArrowLeftToLine, Plus, Trash2 } from 'lucide-react'
+import { getAllProyectos } from '@/src/api/crudProyectos'
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL
 
@@ -18,14 +18,7 @@ export default function Proyectos() {
 		isLoading,
 	} = useQuery({
 		queryKey: ['proyectos'],
-		queryFn: async () => {
-			const query = await Fetch(`${import.meta.env.VITE_FRONTEND_URL}/api/projects/`)
-			const response = await query.json()
-
-			if (!query.ok || !response.proyectos) throw new Error('Error en los proyectos')
-
-			return response.proyectos
-		},
+		queryFn: async () => await getAllProyectos(),
 	})
 
 	useEffect(() => {

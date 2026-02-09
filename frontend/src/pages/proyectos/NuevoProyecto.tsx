@@ -1,39 +1,35 @@
-import authClient from '@lib/auth-client'
-import { useState } from 'react'
+import { createProyecto } from '@/src/api/crudProyectos'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router'
+import Swal from 'sweetalert2'
 
 export default function NuevoProyecto() {
 	const navigate = useNavigate()
-	const { data: session } = authClient.useSession()
-	const [creandoSeccion, setCreandoSeccion] = useState(false)
+	const queryClient = useQueryClient()
 
-	async function crearNuevaSeccion() {
-		const formData = new FormData()
-		formData.append('nombre', 'Nuevo proyecto')
-		formData.append('user_id', session.user.id ?? '')
-
-		try {
-			setCreandoSeccion(true)
-
-			//TODO esto esta funcionando si "Auth"
-			const query = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/projects/create`, {
-				method: 'post',
-				body: formData,
-				credentials: 'include',
+	const { mutate: crearNuevaSeccion, isPending } = useMutation({
+		mutationFn: async () => await createProyecto(),
+		onSuccess: data => {
+			console.log(data)
+			Swal.fire({
+				title: 'Proyecto creado',
+				icon: 'success',
+				showConfirmButton: false,
+				timer: 1500,
+				timerProgressBar: true,
+			}).then(() => {
+				navigate(`/proyectos/${data.id}`)
 			})
-
-			if (!query.ok) throw new Error('No se creo la nueva sección')
-
-			const response = await query.json()
-			console.log(response)
-
-			navigate(`/proyectos/${response.proyecto.proyecto_id}`)
-		} catch (error) {
-			console.log(error)
-		} finally {
-			setCreandoSeccion(false)
-		}
-	}
+			queryClient.invalidateQueries({ queryKey: ['proyectos'] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al crear factura',
+				text: error.message,
+				icon: 'error',
+			})
+		},
+	})
 
 	return (
 		<div className='proyecto'>
@@ -42,7 +38,7 @@ export default function NuevoProyecto() {
 			</div>
 
 			<div className='nuevo-proyecto gap-m margin-m'>
-				<button disabled={creandoSeccion} onClick={() => crearNuevaSeccion()}>
+				<button disabled={isPending} onClick={() => crearNuevaSeccion()}>
 					<img src='../../../images/desde-0.svg' alt='' />
 				</button>
 

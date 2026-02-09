@@ -14,7 +14,6 @@ export type CanvasType = {
 export default function Canvas() {
 	const { proyecto, paginas, setPaginas } = useProjectContext()
 	const [nivelZoom, setNivelZoom] = useState<number>(1.25)
-
 	const [altura, setAltura] = useState<number>(0)
 	const seccionesRef = useRef<HTMLDivElement>(null)
 
@@ -39,20 +38,20 @@ export default function Canvas() {
 	}, [])
 
 	function handleNewPage() {
-		if (!proyecto.proyecto_id) {
+		if (!proyecto.id) {
 			console.error('No hay proyecto cargado')
 			return
 		}
 
 		const newPage: Pagina = {
-			pagina_id: uuid(),
+			id: uuid(),
 			nombre: 'Nueva pagina',
-			proyecto_id: proyecto.proyecto_id,
+			proyecto_id: proyecto.id,
 			plantilla_id: '',
 			secciones: [],
 			orden: '0',
-			created_at: Date.now(),
-			updated_at: Date.now(),
+			created: Date.now(),
+			updated: Date.now(),
 		}
 
 		console.log(paginas)
@@ -68,8 +67,8 @@ export default function Canvas() {
 					{paginas &&
 						paginas?.map(pagina => (
 							<PaginaIndividual
-								key={pagina.pagina_id}
-								id={pagina.pagina_id}
+								key={pagina.id}
+								id={pagina.id}
 								pagina={pagina}
 								setPaginas={setPaginas}
 								secciones={pagina.secciones}

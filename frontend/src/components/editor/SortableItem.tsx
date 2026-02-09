@@ -2,13 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ReactNode } from 'react'
 
-export default function SortableItem({
-	children,
-	id,
-}: {
-	children: ReactNode
-	id: string
-}) {
+export default function SortableItem({ children, id }: { children: ReactNode; id: string }) {
 	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
 		id: id,
 	})

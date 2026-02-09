@@ -1,5 +1,5 @@
 import { Autocomplete, TextField } from '@mui/material'
-import type { Seccion } from 'index'
+import type { Seccion } from '@/index'
 import { useEffect, useRef, useState } from 'react'
 import { DraggableSidebar } from './DraggableSidebar'
 import Masonry from '@mui/lab/Masonry'
@@ -11,11 +11,7 @@ const colors = [
 	{ name: 'Verde', value: '#4caf50' },
 ]
 
-export default function SidebarSecciones({
-	secciones,
-}: {
-	secciones: Seccion[] | undefined
-}) {
+export default function SidebarSecciones({ secciones }: { secciones: Seccion[] | undefined }) {
 	const [selectedColor, setSelectedColor] = useState(colors[0])
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -57,15 +53,13 @@ export default function SidebarSecciones({
 		const nuevasSeccionesFiltradas = secciones.filter(seccion => {
 			// Filtro por opciones (si hay alguna seleccionada)
 			if (opcionesFiltradas && opcionesFiltradas.length > 0) {
-				return seccion.opciones?.some(opcion =>
-					opcionesFiltradas.includes(opcion.nombre)
-				)
+				return seccion.opciones?.some(opcion => opcionesFiltradas.includes(opcion.nombre))
 			}
 
 			// Filtro por opciones (si hay alguna seleccionada)
 			if (categoriasFiltradas && categoriasFiltradas.length > 0) {
 				return seccion.categorias?.some(categoria =>
-					categoriasFiltradas.includes(categoria.nombre)
+					categoriasFiltradas.includes(categoria.nombre),
 				)
 			}
 
@@ -152,14 +146,10 @@ export default function SidebarSecciones({
 				</div>
 			</div>
 
-			<div
-				className='contenedor-secciones'
-				ref={seccionesRef}
-				style={{ height: `${altura}px` }}
-			>
+			<div className='contenedor-secciones' ref={seccionesRef} style={{ height: `${altura}px` }}>
 				<Masonry columns={2} spacing={1.5}>
 					{(seccionesFiltradas ?? []).map(seccion => (
-						<DraggableSidebar key={seccion.seccion_id} seccion={seccion} />
+						<DraggableSidebar key={seccion.id} seccion={seccion} />
 					))}
 				</Masonry>
 			</div>

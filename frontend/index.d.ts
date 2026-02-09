@@ -9,16 +9,20 @@ export type User = {
 
 export type Proyecto = {
 	id: string
-	user_id: string
-	cliente_id?: string
+	usuario: string
+	cliente?: string
 	nombre: string
 	imagen?: string
 	codigo?: string
 	contenido?: string
-	activo?: string
+	activo?: boolean
 	created?: string | number
 	updated?: string | number
-	paginas: Pagina[]
+	paginas: Pagina[] | string
+}
+
+type ProyectoUpdatePayload = Partial<Omit<Proyecto, 'imagen'>> & {
+	imagen?: File | string
 }
 
 export interface Pagina {

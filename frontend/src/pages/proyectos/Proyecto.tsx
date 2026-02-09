@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
 	DndContext,
 	closestCenter,
@@ -19,146 +19,136 @@ import SidebarSecciones from '@components/editor/SidebarSecciones'
 import Canvas from '@components/editor/Canvas'
 import SidebarControllers from '@components/editor/SidebarControllers'
 import useProjectContext from '@context/useProjectContext'
-import Fetch from '@utils/Fetch'
-import { useNavigate, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { v4 as uuidv4 } from 'uuid'
 
-import type { Proyecto, Pagina, Seccion } from '@/index'
+import type { Proyecto, Pagina, Seccion, ProyectoUpdatePayload } from '@/index'
 import TextoEditable from '@components/inputs/TextoEditable'
 import { useControlSave } from '@components/hooks/useControlSave'
-import authClient from '@lib/auth-client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getProyectoById, updateProyecto } from '@/src/api/crudProyectos'
+import { getAllSecciones } from '@/src/api/crudSecciones'
+import Swal from 'sweetalert2'
 
 export default function Proyecto() {
-	const { data: session } = authClient.useSession()
-	const navigate = useNavigate()
-	const { proyecto_id } = useParams()
-	const { proyecto, setProyecto, paginas, setPaginas, nuevaImagen, setNuevaImagen } =
-		useProjectContext()
-	const [secciones, setSecciones] = useState<Seccion[] | undefined>(undefined)
+	//const navigate = useNavigate()
+	const { id } = useParams()
+	const {
+		proyecto,
+		setProyecto,
+		paginas,
+		setPaginas,
+		secciones,
+		setSecciones,
+		nuevaImagen,
+		setNuevaImagen,
+	} = useProjectContext()
 	const [seccionActiva, setSeccionActiva] = useState<Seccion | null>(null)
-	const [loading, setLoading] = useState<boolean>(false)
 	const [titulo, setTitulo] = useState<string>('')
+	const queryClient = useQueryClient()
 
-	//Guardar con control + s
-	useControlSave(handleUpdateProyecto)
+	//Buscar la información del proyecto
+	useQuery({
+		queryKey: ['proyectos', id],
+		enabled: !!id,
+		queryFn: async () => {
+			const proyecto = await getProyectoById(id)
+			setProyecto(proyecto)
+			setTitulo(proyecto.nombre)
 
-	useEffect(() => {
-		buscarProyecto()
-		buscarSecciones()
-	}, [])
-
-	async function buscarProyecto() {
-		try {
-			const query = await Fetch(
-				//`${import.meta.env.VITE_BACKEND_URL}/api/projects/full/${proyecto_id}`
-				`${import.meta.env.VITE_BACKEND_URL}/api/projects/${proyecto_id}`,
-			)
-			const response = await query.json()
-
-			if (typeof response.proyecto == 'object') {
-				setProyecto(response.proyecto)
-				setTitulo(response.proyecto.nombre)
-
-				//console.log(response.proyecto)
-
-				//Agregar las paginas si no es un string vacio
-				if (response.proyecto.paginas !== '') {
-					setPaginas(JSON.parse(response.proyecto.paginas))
-				}
-
-				if (response.proyecto?.paginas == '') {
-					setPaginas([])
-				}
-			} else {
-				console.log('No esta encontrando el proyecto')
-				//navigate('/proyectos')
+			if (typeof proyecto.paginas === 'string' && proyecto.paginas != '') {
+				setPaginas(JSON.parse(proyecto.paginas))
 			}
-		} catch (error) {
-			//navigate('/proyectos')
-			console.log(error)
-		}
-	}
 
-	async function buscarSecciones() {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sections`)
-			const response = await query.json()
+			if (proyecto?.paginas == '') {
+				setPaginas([])
+			}
 
-			if (typeof response.secciones == 'object') {
+			return proyecto
+		},
+	})
+
+	//Buscar todas las secciones
+	useQuery({
+		queryKey: ['secciones'],
+		queryFn: async () => {
+			const secciones = await getAllSecciones()
+
+			if (typeof secciones == 'object') {
 				//Agregar el draggable_id a cada sección de las paginas
-				const nuevasSecciones = response.secciones.map((seccion: Seccion) => {
+				const nuevasSecciones = secciones.map((seccion: Seccion) => {
 					return {
 						...seccion,
 						draggable_id: uuidv4(),
 					}
 				})
 
-				//setSecciones(response.secciones)
+				//setSecciones(secciones)
 				setSecciones(nuevasSecciones)
-
-				//console.log(response.secciones)
 			}
-		} catch (error) {
-			navigate('/proyectos')
-			console.log(error)
-		}
-	}
 
-	async function handleUpdateProyecto() {
-		if (!proyecto || !session.user.id || !proyecto_id) return
+			return secciones
+		},
+	})
 
-		const formData = new FormData()
+	const { mutate: handleUpdateProyecto, isPending } = useMutation({
+		mutationFn: async () => {
+			//Opcion para grabar con las secciones son codigo
+			//const paginasActuales = JSON.stringify(paginas)
 
-		// Agrega todos los campos de seccion (excepto imágenes)
-		Object.entries(proyecto).forEach(([key, value]) => {
-			// Si el valor es null o undefined, no lo agregues
-			if (value !== undefined && value !== null) {
-				formData.append(key, String(value))
+			//Quitarle a las secciones el contenido antes de guardar
+			const nuevasPaginas = paginas.map(pagina => {
+				const secciones = pagina.secciones.map(seccion => {
+					return { ...seccion, codigo: '' }
+				})
+
+				return { ...pagina, secciones: secciones }
+			})
+
+			//console.log(paginas)
+			//console.log(nuevasPaginas)
+
+			const payload: ProyectoUpdatePayload = {
+				usuario: proyecto.usuario,
+				cliente: proyecto.cliente || '',
+				nombre: proyecto.nombre || '',
+				imagen: nuevaImagen || proyecto.imagen,
+				codigo: proyecto.codigo || '',
+				contenido: proyecto.contenido || '',
+				activo: proyecto.activo || true,
+				created: proyecto.contenido || '',
+				updated: proyecto.contenido || '',
+				paginas: JSON.stringify(nuevasPaginas) || proyecto.paginas,
 			}
-		})
 
-		//Agregar el titulo al FormData
-		formData.set('nombre', titulo)
-		formData.set('user_id', session.user.id)
-		formData.set('proyecto_id', proyecto_id)
-		formData.set('activo', '1')
-		formData.set('paginas', JSON.stringify(paginas))
+			await updateProyecto(proyecto.id, payload)
 
-		// Solo agrega las imágenes si hay nuevas seleccionadas
-		if (nuevaImagen) {
-			formData.append('imagen', nuevaImagen)
-		}
+			//Limpiar las imagenes
+			setNuevaImagen(undefined)
+		},
+		onSuccess: () => {
+			Swal.fire({
+				title: 'Proyecto actualizado',
+				icon: 'success',
+				showConfirmButton: false,
+				timer: 1500,
+				timerProgressBar: true,
+			}).then(() => {
+				//navigate(`/facturas/${data.id}`);
+			})
+			queryClient.invalidateQueries({ queryKey: ['proyectos', id] })
+		},
+		onError: error => {
+			Swal.fire({
+				title: 'Error al actualizar la sección',
+				text: error.message,
+				icon: 'error',
+			})
+		},
+	})
 
-		// Ejemplo de envío
-		try {
-			setLoading(true)
-
-			const response = await Fetch(
-				`${import.meta.env.VITE_BACKEND_URL}/api/projects/update`,
-				{
-					method: 'POST', // o 'PUT' según tu API
-					body: formData,
-					credentials: 'include',
-				},
-				true,
-			)
-			//const data = await response.json()
-
-			//console.log(data)
-
-			if (response.ok) {
-				// Refresca la sección después de un update exitoso
-				await buscarProyecto()
-				//Limpiar las imagenes
-				setNuevaImagen(undefined)
-			}
-		} catch (error) {
-			console.log(error)
-			// Maneja el error aquí
-		} finally {
-			setLoading(false)
-		}
-	}
+	//Guardar con control + s
+	useControlSave(handleUpdateProyecto)
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -220,7 +210,7 @@ export default function Proyecto() {
 
 			if (activeIndex !== undefined && overIndex !== undefined && activeIndex !== overIndex) {
 				const nuevasPaginas = paginas.map(pagina => {
-					if (pagina.pagina_id === idPaginaActiva) {
+					if (pagina.id === idPaginaActiva) {
 						return {
 							...pagina,
 							secciones: arrayMove(pagina.secciones || [], activeIndex, overIndex),
@@ -228,6 +218,7 @@ export default function Proyecto() {
 					}
 					return pagina
 				})
+
 				setPaginas(nuevasPaginas)
 				return // Importante: salir para no ejecutar el resto
 			}
@@ -246,13 +237,13 @@ export default function Proyecto() {
 
 			// 2. Crear el nuevo array de páginas
 			const nuevasPaginas = paginas.map(pagina => {
-				if (pagina.pagina_id === paginaActiva.pagina_id) {
+				if (pagina.id === paginaActiva.id) {
 					return {
 						...pagina,
 						secciones: nuevasSeccionesPaginaActiva,
 					}
 				}
-				if (pagina.pagina_id === paginaOver.pagina_id) {
+				if (pagina.id === paginaOver.id) {
 					return {
 						...pagina,
 						secciones: nuevasSeccionesPaginaOver,
@@ -273,7 +264,7 @@ export default function Proyecto() {
 			const nuevasSeccionesPaginaOver = [...(paginaOver.secciones || []), seccionActiva]
 
 			const nuevasPaginas = paginas.map(pagina => {
-				if (pagina.pagina_id === paginaOver.pagina_id) {
+				if (pagina.id === paginaOver.id) {
 					return {
 						...pagina,
 						secciones: nuevasSeccionesPaginaOver,
@@ -318,13 +309,13 @@ export default function Proyecto() {
 			nuevasSeccionesPaginaOver.splice(overIndex, 0, seccionActiva)
 
 			const nuevasPaginas = paginas.map(pagina => {
-				if (pagina.pagina_id === paginaActiva.pagina_id) {
+				if (pagina.id === paginaActiva.id) {
 					return {
 						...pagina,
 						secciones: nuevasSeccionesPaginaActiva,
 					}
 				}
-				if (pagina.pagina_id === paginaOver.pagina_id) {
+				if (pagina.id === paginaOver.id) {
 					return {
 						...pagina,
 						secciones: nuevasSeccionesPaginaOver,
@@ -339,7 +330,7 @@ export default function Proyecto() {
 		//Cambiar el draggable_id de se sección usada
 
 		const nuevasSecciones = secciones?.map(seccion => {
-			if (seccion.seccion_id != seccionActiva?.seccion_id) {
+			if (seccion.id != seccionActiva?.id) {
 				return { ...seccion }
 			}
 
@@ -365,14 +356,14 @@ export default function Proyecto() {
 	}
 
 	function obtenerPaginaPorId(paginas: Pagina[], id: string): Pagina | undefined {
-		return paginas.find(pagina => pagina.pagina_id === id)
+		return paginas.find(pagina => pagina.id === id)
 	}
 
 	return (
 		<div className='proyecto'>
 			<div className='header margin-bottom-3xs'>
 				<h1 className='flex-row items-middle flex-wrap gap-2xs'>
-					{proyecto.activo == '0' && <div className='estado-borrado'></div>}
+					{proyecto.activo == false && <div className='estado-borrado'></div>}
 					<TextoEditable texto={titulo} setTexto={setTitulo} size={34} />
 				</h1>
 			</div>
@@ -394,7 +385,7 @@ export default function Proyecto() {
 					</DragOverlay>
 				</DndContext>
 
-				<SidebarControllers loading={loading} handleUpdateProyecto={handleUpdateProyecto} />
+				<SidebarControllers loading={isPending} handleUpdateProyecto={handleUpdateProyecto} />
 			</div>
 		</div>
 	)

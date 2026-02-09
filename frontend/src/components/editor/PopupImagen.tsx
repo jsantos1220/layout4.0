@@ -1,9 +1,12 @@
 import ImageFileInput from '@components/inputs/FileInput'
 import useProjectContext from '@context/useProjectContext'
+import pb from '@lib/pocketbase'
 
 export default function PopupImagen() {
 	const backendUrl = import.meta.env.VITE_BACKEND_URL
 	const { proyecto, nuevaImagen, setNuevaImagen } = useProjectContext()
+
+	pb.files.getURL(proyecto, proyecto?.imagen)
 
 	return (
 		<div>
@@ -11,7 +14,7 @@ export default function PopupImagen() {
 				{proyecto?.imagen == '' ? (
 					<img src={backendUrl + '/uploads/placeholder.jpg'} alt='Imagen principal' />
 				) : (
-					<img src={backendUrl + '/uploads/' + proyecto?.imagen} alt='Imagen principal' />
+					<img src={pb.files.getURL(proyecto, proyecto?.imagen)} alt='Imagen principal' />
 				)}
 			</div>
 			<div className='separador'></div>

@@ -1,10 +1,10 @@
 import { useDraggable } from '@dnd-kit/core'
-import { Seccion } from 'index'
+import { Seccion } from '@/index'
 import { SeccionDragagle } from './SeccionDragagle'
 
 export function DraggableSidebar({ seccion }: { seccion: Seccion }) {
 	const { attributes, listeners, setNodeRef } = useDraggable({
-		id: seccion.draggable_id ?? seccion.seccion_id,
+		id: seccion.draggable_id ?? seccion.id,
 		data: {
 			adicional: true,
 		},

@@ -28,7 +28,7 @@ export default function SidebarControllers({
 	loading,
 	handleUpdateProyecto,
 }: SidebarControllersType) {
-	const { proyecto, paginas } = useProjectContext()
+	const { proyecto, paginas, secciones } = useProjectContext()
 	const [content, setContent] = useState<JSX.Element | null>(null)
 	const [open, setOpen] = useState(false)
 	const navigate = useNavigate()
@@ -46,22 +46,30 @@ export default function SidebarControllers({
 	function handleCodeDownload() {
 		//Hacer un arregle de los codigos por pagina
 		const paginasDeBricks = paginas.map(pagina => {
-			const secciones = pagina.secciones?.map(seccion => {
-				for (const property in seccion) {
-					if (property == 'codigo') {
-						return jsonToObject(seccion[property])
-					}
-				}
-			})
-
 			let content: BricksContent[] = []
 			let globalClasses: GlobalClasses[] = []
+			let idsSecciones = []
 
-			secciones?.forEach(seccion => {
-				seccion?.content.forEach(cont => {
+			//Saca los ids de las secciones por pagina
+			pagina.secciones?.forEach(seccion => {
+				idsSecciones.push(seccion.id)
+			})
+
+			//Saca los codigos de cada sección como objetos
+			const codigos = idsSecciones.map(id => {
+				const seccionEspecifica = secciones.filter(seccion => seccion.id == id)
+				const codigo = seccionEspecifica[0]?.codigo
+				return jsonToObject(codigo)
+			})
+
+			codigos?.forEach(codigo => {
+				//Verificar si la pagina no esta si secciones
+				if (!codigo) return
+
+				codigo?.content?.forEach(cont => {
 					content.push(cont)
 				})
-				seccion?.globalClasses.forEach(cont => {
+				codigo?.globalClasses.forEach(cont => {
 					globalClasses.push(cont)
 				})
 			})
