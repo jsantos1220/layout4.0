@@ -1,9 +1,9 @@
+import useAuthStore from '@context/useAuthContext'
 import React from 'react'
 import { Link } from 'react-router'
-import authClient from '@lib/auth-client'
 
 const Home: React.FC = () => {
-	const { data: session } = authClient.useSession()
+	const { user } = useAuthStore()
 
 	return (
 		<div className='home-page'>
@@ -12,7 +12,7 @@ const Home: React.FC = () => {
 				<p>A secure authentication system with user profiles</p>
 
 				<div className='welcome-user'>
-					<h2>Welcome back, {session.user?.name}!</h2>
+					<h2>Welcome back, {user?.name}!</h2>
 					<p>
 						<Link to='/profile' className='btn'>
 							View Your Profile

@@ -1,23 +1,33 @@
 import TabalaOpciones from '@components/inputs/TablaOpciones'
 import { Alert, Snackbar } from '@mui/material'
-import Fetch from '@utils/Fetch'
-import { Opcion } from 'index'
+import { Opcion } from '@/index'
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { createOpcion, deleteOpcion, getAllOpciones, updateOpcion } from '@/src/api/crudOpciones'
+import { Notyf } from 'notyf'
+import 'notyf/notyf.min.css'
 
 export default function Opciones() {
 	const [opciones, setOpciones] = useState<Opcion[]>([])
 	const [search, setSearch] = useState('')
 	const [filteredOpciones, setFilteredOpciones] = useState<Opcion[]>([])
 	const [nuevaOpcion, setNuevaOpcion] = useState<string | undefined>(undefined)
-	const [creandoOpcion, setCreandoOpcion] = useState(false)
 	const [errorCrearOpcion, setErrorCrearOpcion] = useState(false)
 	const [successCrearOpcion, setSuccessCrearOpcion] = useState(false)
+	const queryClient = useQueryClient()
+	const notyf = new Notyf()
 
 	//Buscar las opciones
+	const { data: dataOpciones } = useQuery({
+		queryKey: ['opciones'],
+		queryFn: async () => getAllOpciones(),
+	})
+
 	useEffect(() => {
-		buscarOpcionesGenerales()
-	}, [])
+		setOpciones(dataOpciones)
+		setFilteredOpciones(dataOpciones)
+	}, [dataOpciones])
 
 	//Actualizar el search
 	useEffect(() => {
@@ -25,91 +35,51 @@ export default function Opciones() {
 			setFilteredOpciones(opciones)
 		} else {
 			setFilteredOpciones(
-				opciones.filter(cat => cat.nombre.toLowerCase().includes(search.toLowerCase()))
+				opciones.filter(cat => cat.nombre.toLowerCase().includes(search.toLowerCase())),
 			)
 		}
 	}, [search, opciones])
 
-	async function buscarOpcionesGenerales() {
-		try {
-			const query = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/opciones/`, {
-				credentials: 'include',
-			})
-			const response = await query.json()
-			setOpciones(response.opciones)
-			setFilteredOpciones(response.opciones)
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	//Crear una nueva opción
+	const { mutate: crearNuevaOpcion, isPending } = useMutation({
+		mutationFn: async () => {
+			if (nuevaOpcion == '') throw new Error('Nombre vacio')
 
-	//Crear una nueva categoría
-	async function crearNuevaOpcion() {
-		try {
-			setCreandoOpcion(true)
+			return await createOpcion(nuevaOpcion)
+		},
+		onSuccess: () => {
+			setNuevaOpcion('')
+			notyf.success('Categoría creada')
+			queryClient.invalidateQueries({ queryKey: ['opciones'] })
+		},
+		onError: () => {
+			notyf.error('No se pudo crear la categoría')
+		},
+	})
 
-			if (nuevaOpcion == '') return
-
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/opciones/create`, {
-				method: 'POST',
-				body: JSON.stringify({ nombre: nuevaOpcion }),
-			})
-
-			const response = await query.json()
-
-			if (response.message == 'El nombre ya existe') {
-				setErrorCrearOpcion(true)
-				return
-			}
-
-			if (query.ok) {
-				setSuccessCrearOpcion(true)
-				setNuevaOpcion('')
-				buscarOpcionesGenerales()
-			}
-		} catch (error) {
-			console.log(error)
-		} finally {
-			setCreandoOpcion(false)
-		}
-	}
-
-	//Esto debe actualizar la categoría
-	async function handleEdit(opcion: Opcion) {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/opciones/update`, {
-				method: 'post',
-				body: JSON.stringify({
-					opcion_id: opcion.opcion_id,
-					nombre: opcion.nombre,
-				}),
-			})
-
-			if (query.ok) {
-				buscarOpcionesGenerales()
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	//Esto debe actualizar la opción
+	const { mutate: handleEdit } = useMutation({
+		mutationFn: async (opcion: Opcion) => await updateOpcion(opcion.id, opcion.nombre),
+		onSuccess: () => {
+			notyf.success('Opción editada')
+			queryClient.invalidateQueries({ queryKey: ['opciones'] })
+		},
+		onError: () => {
+			notyf.error('No se pudo editar la opcion')
+		},
+	})
 
 	//Para borrar la categoría en cuestión
-	async function handleDelete(opcion: Opcion) {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/opciones/delete`, {
-				method: 'post',
-				body: JSON.stringify({
-					opcion_id: opcion.opcion_id,
-				}),
-			})
-
-			if (query.ok) {
-				buscarOpcionesGenerales()
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	const { mutate: handleDelete } = useMutation({
+		mutationFn: async (opcion: Opcion) => await deleteOpcion(opcion.id),
+		onSuccess: () => {
+			notyf.success('Categoría borrada')
+			queryClient.invalidateQueries({ queryKey: ['opciones'] })
+		},
+		onError: () => {
+			notyf.error('No se pudo borrar la categoría')
+		},
+	})
 
 	function handleClose() {
 		setErrorCrearOpcion(false)
@@ -129,12 +99,12 @@ export default function Opciones() {
 							type='text'
 							value={nuevaOpcion}
 							onChange={e => setNuevaOpcion(e.target.value)}
-							placeholder='Nueva caetgoría'
+							placeholder='Nueva opción'
 						/>
 						<button
 							className='btn-secondary'
 							onClick={() => crearNuevaOpcion()}
-							disabled={creandoOpcion}
+							disabled={isPending}
 						>
 							<Plus />
 							Agregar

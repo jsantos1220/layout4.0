@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
 	DndContext,
 	closestCenter,
@@ -28,13 +28,13 @@ import { useControlSave } from '@components/hooks/useControlSave'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getProyectoById, updateProyecto } from '@/src/api/crudProyectos'
 import { getAllSecciones } from '@/src/api/crudSecciones'
-import Swal from 'sweetalert2'
+import { Notyf } from 'notyf'
+import 'notyf/notyf.min.css'
 
 export default function Proyecto() {
 	//const navigate = useNavigate()
 	const { id } = useParams()
 	const {
-		proyecto,
 		setProyecto,
 		paginas,
 		setPaginas,
@@ -46,50 +46,49 @@ export default function Proyecto() {
 	const [seccionActiva, setSeccionActiva] = useState<Seccion | null>(null)
 	const [titulo, setTitulo] = useState<string>('')
 	const queryClient = useQueryClient()
+	const notyf = new Notyf()
 
 	//Buscar la información del proyecto
-	useQuery({
+	const { data: proyecto } = useQuery({
 		queryKey: ['proyectos', id],
 		enabled: !!id,
-		queryFn: async () => {
-			const proyecto = await getProyectoById(id)
-			setProyecto(proyecto)
-			setTitulo(proyecto.nombre)
-
-			if (typeof proyecto.paginas === 'string' && proyecto.paginas != '') {
-				setPaginas(JSON.parse(proyecto.paginas))
-			}
-
-			if (proyecto?.paginas == '') {
-				setPaginas([])
-			}
-
-			return proyecto
-		},
+		queryFn: async () => await getProyectoById(id),
 	})
+
+	useEffect(() => {
+		setProyecto(proyecto)
+		setTitulo(proyecto?.nombre)
+
+		if (typeof proyecto?.paginas === 'string' && proyecto?.paginas != '') {
+			setPaginas(JSON.parse(proyecto?.paginas))
+		}
+
+		if (proyecto?.paginas == '') {
+			setPaginas([])
+		}
+	}, [proyecto])
 
 	//Buscar todas las secciones
-	useQuery({
+	const { data: dataSecciones } = useQuery({
 		queryKey: ['secciones'],
-		queryFn: async () => {
-			const secciones = await getAllSecciones()
-
-			if (typeof secciones == 'object') {
-				//Agregar el draggable_id a cada sección de las paginas
-				const nuevasSecciones = secciones.map((seccion: Seccion) => {
-					return {
-						...seccion,
-						draggable_id: uuidv4(),
-					}
-				})
-
-				//setSecciones(secciones)
-				setSecciones(nuevasSecciones)
-			}
-
-			return secciones
-		},
+		queryFn: async () => await getAllSecciones(),
 	})
+
+	useEffect(() => {
+		if (typeof dataSecciones == 'object') {
+			console.log('esto entra?')
+			//Agregar el draggable_id a cada sección de las paginas
+			const nuevasSecciones = dataSecciones.map((seccion: Seccion) => {
+				return {
+					...seccion,
+					draggable_id: uuidv4(),
+				}
+			})
+
+			//setSecciones(secciones)
+			setSecciones(nuevasSecciones)
+		}
+	}, [dataSecciones])
 
 	const { mutate: handleUpdateProyecto, isPending } = useMutation({
 		mutationFn: async () => {
@@ -104,9 +103,6 @@ export default function Proyecto() {
 
 				return { ...pagina, secciones: secciones }
 			})
-
-			//console.log(paginas)
-			//console.log(nuevasPaginas)
 
 			const payload: ProyectoUpdatePayload = {
 				usuario: proyecto.usuario,
@@ -127,23 +123,11 @@ export default function Proyecto() {
 			setNuevaImagen(undefined)
 		},
 		onSuccess: () => {
-			Swal.fire({
-				title: 'Proyecto actualizado',
-				icon: 'success',
-				showConfirmButton: false,
-				timer: 1500,
-				timerProgressBar: true,
-			}).then(() => {
-				//navigate(`/facturas/${data.id}`);
-			})
+			notyf.success('Proyecto actualizado')
 			queryClient.invalidateQueries({ queryKey: ['proyectos', id] })
 		},
-		onError: error => {
-			Swal.fire({
-				title: 'Error al actualizar la sección',
-				text: error.message,
-				icon: 'error',
-			})
+		onError: () => {
+			notyf.error('Error al actualizar la sección')
 		},
 	})
 
@@ -167,6 +151,8 @@ export default function Proyecto() {
 		if (!secciones || !paginas) return
 
 		const allSections = getAllSeccionsInProject(paginas)
+
+		console.log(secciones)
 
 		//Esto es para buscar entre las secciones cual es la que se activa al
 		//empezar el drag
@@ -363,7 +349,7 @@ export default function Proyecto() {
 		<div className='proyecto'>
 			<div className='header margin-bottom-3xs'>
 				<h1 className='flex-row items-middle flex-wrap gap-2xs'>
-					{proyecto.activo == false && <div className='estado-borrado'></div>}
+					{proyecto?.activo == false && <div className='estado-borrado'></div>}
 					<TextoEditable texto={titulo} setTexto={setTitulo} size={34} />
 				</h1>
 			</div>

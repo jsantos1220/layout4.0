@@ -5,8 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Proyecto } from '@/index'
 import { ArrowLeftToLine, Plus, Trash2 } from 'lucide-react'
 import { getAllProyectos } from '@/src/api/crudProyectos'
-
-const backendUrl = import.meta.env.VITE_BACKEND_URL
+import pb from '@lib/pocketbase'
 
 export default function Proyectos() {
 	const [proyectosFiltrados, setProyectosFiltrados] = useState<Proyecto[] | undefined>([])
@@ -22,8 +21,8 @@ export default function Proyectos() {
 	})
 
 	useEffect(() => {
-		const proyectosActivos = proyectos?.filter(proyecto => proyecto.activo == '1')
-		const proyectosBorrados = proyectos?.filter(proyecto => proyecto.activo == '0')
+		const proyectosActivos = proyectos?.filter(proyecto => proyecto.activo == true)
+		const proyectosBorrados = proyectos?.filter(proyecto => proyecto.activo == false)
 
 		if (borrados == true) {
 			setProyectosFiltrados(proyectosBorrados)
@@ -99,9 +98,9 @@ export default function Proyectos() {
 						<Link to={`/proyectos/${proyecto.id}`} key={index} className='proyecto-card'>
 							<div className='imagen margin-bottom-xs'>
 								{proyecto.imagen == '' ? (
-									<img src={`${backendUrl}/uploads/placeholder.jpg`} />
+									<img src={'../../../images/placeholder.jpg'} />
 								) : (
-									<img src={`${backendUrl}/uploads/${proyecto.imagen}`} />
+									<img src={pb.files.getURL(proyecto, proyecto?.imagen)} />
 								)}
 							</div>
 

@@ -18,7 +18,7 @@ export async function getOpcionById(id: string): Promise<Opcion | undefined> {
 export async function getAllOpciones(): Promise<Opcion[] | undefined> {
 	try {
 		const records = await pb.collection('opciones').getFullList<Opcion>({
-			//sort: 'created',
+			sort: '-created',
 			//filter: 'en_papelera != true',
 			//TODO: esto hay que limitarlo si lo va a usar mas gente
 			//fields:

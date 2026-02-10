@@ -1,23 +1,38 @@
 import EnhancedTable from '@components/inputs/TablaCategorias'
 import { Alert, Snackbar } from '@mui/material'
-import Fetch from '@utils/Fetch'
-import { Categoria } from 'index'
+import { Categoria } from '@/index'
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+	createCategoria,
+	deleteCategoria,
+	getAllCategorias,
+	updateCategoria,
+} from '@/src/api/crudCategorias'
+import { Notyf } from 'notyf'
+import 'notyf/notyf.min.css'
 
 export default function Categorias() {
 	const [categorias, setCategorias] = useState<Categoria[]>([])
 	const [search, setSearch] = useState('')
 	const [filteredCategorias, setFilteredCategorias] = useState<Categoria[]>([])
 	const [nuevaCategoria, setNuevaCategoria] = useState<string | undefined>(undefined)
-	const [creandoCategoria, setCreandoCategoria] = useState(false)
 	const [errorCrearCat, setErrorCrearCat] = useState(false)
 	const [successCrearCat, setSuccessCrearCat] = useState(false)
+	const queryClient = useQueryClient()
+	const notyf = new Notyf()
 
 	//Buscar las categorias
+	const { data: dataCategorias } = useQuery({
+		queryKey: ['categorias'],
+		queryFn: async () => getAllCategorias(),
+	})
+
 	useEffect(() => {
-		buscarCategoriasGenerales()
-	}, [])
+		setCategorias(dataCategorias)
+		setFilteredCategorias(dataCategorias)
+	}, [dataCategorias])
 
 	//Actualizar el search
 	useEffect(() => {
@@ -25,92 +40,51 @@ export default function Categorias() {
 			setFilteredCategorias(categorias)
 		} else {
 			setFilteredCategorias(
-				categorias.filter(cat => cat.nombre.toLowerCase().includes(search.toLowerCase()))
+				categorias.filter(cat => cat.nombre.toLowerCase().includes(search.toLowerCase())),
 			)
 		}
 	}, [search, categorias])
 
-	async function buscarCategoriasGenerales() {
-		try {
-			const query = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/`, {
-				credentials: 'include',
-			})
-			const response = await query.json()
-			setCategorias(response.categorias)
-			setFilteredCategorias(response.categorias)
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	const { mutate: crearNuevaCategoria, isPending } = useMutation({
+		mutationFn: async () => {
+			if (nuevaCategoria == '') throw new Error('Nombre vacio')
 
-	//Crear una nueva categoría
-	async function crearNuevaCategoria() {
-		try {
-			setCreandoCategoria(true)
-
-			if (nuevaCategoria == '') return
-
-			//TODO esto esta funcionando sin "Auth"
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/create`, {
-				method: 'POST',
-				body: JSON.stringify({ nombre: nuevaCategoria }),
-			})
-
-			const response = await query.json()
-
-			if (response.message == 'El nombre ya existe') {
-				setErrorCrearCat(true)
-				return
-			}
-
-			if (response.message == 'Categoría creada') {
-				setSuccessCrearCat(true)
-				setNuevaCategoria('')
-				buscarCategoriasGenerales()
-			}
-		} catch (error) {
-			console.log(error)
-		} finally {
-			setCreandoCategoria(false)
-		}
-	}
+			return await createCategoria(nuevaCategoria)
+		},
+		onSuccess: () => {
+			setNuevaCategoria('')
+			notyf.success('Categoría creada')
+			queryClient.invalidateQueries({ queryKey: ['categorias'] })
+		},
+		onError: () => {
+			notyf.error('No se pudo crear la categoría')
+		},
+	})
 
 	//Esto debe actualizar la categoría
-	async function handleEdit(categoria: Categoria) {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/update`, {
-				method: 'post',
-				body: JSON.stringify({
-					categoria_id: categoria.categoria_id,
-					nombre: categoria.nombre,
-				}),
-			})
-
-			if (query.ok) {
-				buscarCategoriasGenerales()
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	const { mutate: handleEdit } = useMutation({
+		mutationFn: async (categoria: Categoria) =>
+			await updateCategoria(categoria.id, categoria.nombre),
+		onSuccess: () => {
+			notyf.success('Categoría editada')
+			queryClient.invalidateQueries({ queryKey: ['categorias'] })
+		},
+		onError: () => {
+			notyf.error('No se pudo editar la categoría')
+		},
+	})
 
 	//Para borrar la categoría en cuestión
-	async function handleDelete(categoria: Categoria) {
-		try {
-			const query = await Fetch(`${import.meta.env.VITE_BACKEND_URL}/api/categorias/delete`, {
-				method: 'post',
-				body: JSON.stringify({
-					categoria_id: categoria.categoria_id,
-				}),
-			})
-
-			if (query.ok) {
-				buscarCategoriasGenerales()
-			}
-		} catch (error) {
-			console.log(error)
-		}
-	}
+	const { mutate: handleDelete } = useMutation({
+		mutationFn: async (categoria: Categoria) => await deleteCategoria(categoria.id),
+		onSuccess: () => {
+			notyf.success('Categoría borrada')
+			queryClient.invalidateQueries({ queryKey: ['categorias'] })
+		},
+		onError: () => {
+			notyf.error('No se pudo borrar la categoría')
+		},
+	})
 
 	function handleClose() {
 		setErrorCrearCat(false)
@@ -135,7 +109,7 @@ export default function Categorias() {
 						<button
 							className='btn-secondary'
 							onClick={() => crearNuevaCategoria()}
-							disabled={creandoCategoria}
+							disabled={isPending}
 						>
 							<Plus />
 							Agregar

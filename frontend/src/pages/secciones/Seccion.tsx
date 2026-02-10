@@ -1,6 +1,6 @@
 import SidebarSeccionIndividual from '@components/SidebarSeccionIndividual'
 import type { Seccion, SeccionUpdatePayload } from '@/index'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import CodeEditor from '@uiw/react-textarea-code-editor'
 import ImagenPrincipal from '@components/editar-seccion/ImagenPrincipal'
@@ -24,16 +24,17 @@ export default function Seccion() {
 	const [nombre, setNombre] = useState<string>('')
 	const queryClient = useQueryClient()
 
-	useQuery({
+	const { data: seccionData } = useQuery({
 		queryKey: ['secciones', id],
-		queryFn: async () => {
-			const data = await getSeccionById(id)
-			setSeccion(data)
-			setNombre(data.nombre)
-
-			return data
-		},
+		queryFn: async () => await getSeccionById(id),
 	})
+
+	useEffect(() => {
+		if (seccionData) {
+			setSeccion(seccionData)
+			setNombre(seccionData.nombre)
+		}
+	}, [seccionData])
 
 	const { mutate: guardarSeccion, isPending } = useMutation({
 		mutationFn: async () => {

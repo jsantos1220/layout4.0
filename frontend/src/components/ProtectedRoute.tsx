@@ -1,15 +1,21 @@
-import { Navigate, Outlet } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 import Sidebar from '@components/Sidebar'
-import authClient from '@lib/auth-client'
+import useAuthStore from '@context/useAuthContext'
+import { useEffect } from 'react'
+import pb from '@lib/pocketbase'
 
 export default function ProtectedRoute() {
-	const { data: session, isPending } = authClient.useSession()
+	const { loading } = useAuthStore()
+	const navigate = useNavigate()
 
-	if (isPending) {
+	if (loading) {
 		return <div>Cargando...</div> // O tu componente de loading
 	}
 
-	if (!session) return <Navigate to='/login' replace />
+	useEffect(() => {
+		const userId = pb.authStore.record?.id
+		if (!userId) navigate('/login')
+	}, [])
 
 	return (
 		<div className='contenedor'>

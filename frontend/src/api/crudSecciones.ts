@@ -1,6 +1,8 @@
 import useAuthStore from '@context/useAuthContext'
 import pb from '@lib/pocketbase'
 import { Seccion, SeccionUpdatePayload } from '@/index'
+import { getAllCategoriaSecciones } from './crudCategoriaSecciones'
+import { getAllOpcionesSecciones } from './crudOpcionesSecciones'
 
 //Obtener registro por ID
 export async function getSeccionById(id: string): Promise<Seccion | undefined> {
@@ -17,15 +19,31 @@ export async function getSeccionById(id: string): Promise<Seccion | undefined> {
 //Obtener todos los registros
 export async function getAllSecciones(): Promise<Seccion[] | undefined> {
 	try {
-		const records = await pb.collection('secciones').getFullList<Seccion>({
-			//sort: 'created',
-			//filter: 'en_papelera != true',
-			//TODO: esto hay que limitarlo si lo va a usar mas gente
-			//fields:
-			//	'id, imagen_principal, nombre, updated, usuario, activo, collectionName, collectionId, created',
+		const secciones = await pb.collection('secciones').getFullList<Seccion>()
+		const categoriasSecciones = await getAllCategoriaSecciones()
+		const opcionesSecciones = await getAllOpcionesSecciones()
+
+		//Ampliar las secciones con las categorias
+		const seccionesCompletas = secciones.map(seccion => {
+			//Filtrar las categorias_opciones de esta seccion
+			const categoriasSeccionesInt = categoriasSecciones.filter(c => c.seccion == seccion.id)
+			const opcionesSeccionesInt = opcionesSecciones.filter(o => o.seccion == seccion.id)
+
+			//Extraer las categorias y opciones dentro de categorias_opciones por seccion
+			const categoriasDeSeccion = categoriasSeccionesInt.map(c => c.expand.categoria)
+			const opcionesDeSeccion = opcionesSeccionesInt.map(c => c.expand.opcion)
+
+			const seccionCompleta = {
+				...seccion,
+				categorias: categoriasDeSeccion,
+				opciones: opcionesDeSeccion,
+			}
+
+			//console.log(seccionCompleta)
+			return seccionCompleta
 		})
 
-		return records
+		return seccionesCompletas
 	} catch (error) {
 		//console.log(error)
 		throw error

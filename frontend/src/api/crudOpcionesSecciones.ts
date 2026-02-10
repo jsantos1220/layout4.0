@@ -44,6 +44,7 @@ export async function getAllOpcionesSecciones(): Promise<Opciones_secciones[] | 
 			//TODO: esto hay que limitarlo si lo va a usar mas gente
 			//fields:
 			//	'id, comprobante, cliente, fecha, total, termino_pago, estatus, en_papelera, created',
+			expand: 'opcion',
 		})
 
 		return records

@@ -33,8 +33,8 @@ export async function getAllCategoriaSeccionesById(
 
 		return records
 	} catch (error) {
-		//console.log(error)
-		throw error
+		console.log(error)
+		//throw error
 	}
 }
 
@@ -49,6 +49,7 @@ export async function getAllCategoriaSecciones(): Promise<Categorias_secciones[]
 				//TODO: esto hay que limitarlo si lo va a usar mas gente
 				//fields:
 				//	'id, comprobante, cliente, fecha, total, termino_pago, estatus, en_papelera, created',
+				expand: 'categoria',
 			})
 
 		return records

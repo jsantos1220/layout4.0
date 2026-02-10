@@ -62,7 +62,7 @@ export default function Login() {
 
 					<h1>Log in</h1>
 
-					<form onSubmit={handleSubmit(onSubmit)}>
+					<form onSubmit={handleSubmit(onSubmit)} autoComplete='on'>
 						<div className='form-group'>
 							<label htmlFor='email'>Username or email *</label>
 							<Input
@@ -73,8 +73,10 @@ export default function Login() {
 										message: 'Please enter a valid email',
 									},
 								})}
+								id='email'
 								placeholder='email@email.com'
-								//type='email'
+								type='email'
+								autoComplete='email'
 							/>
 							{errors.email && <div className='error-message'>{errors.email.message}</div>}
 						</div>
@@ -90,8 +92,10 @@ export default function Login() {
 										message: 'Password must be at least 8 characters',
 									},
 								})}
+								id='password'
 								type='password'
 								placeholder='Password'
+								autoComplete='current-password'
 							/>
 
 							{errors.password && (

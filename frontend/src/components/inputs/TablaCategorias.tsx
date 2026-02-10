@@ -9,11 +9,11 @@ import {
 	TablePagination,
 	TableRow,
 } from '@mui/material'
-import { Categoria } from 'index'
+import { Categoria } from '@/index'
 import formatDate from '@utils/formatDate'
 
 interface Column {
-	id: 'categoria_id' | 'nombre' | 'created_at' | 'updated_at' | 'acciones'
+	id: 'id' | 'nombre' | 'created' | 'updated' | 'acciones'
 	label: string
 	minWidth?: number
 	width?: number
@@ -22,11 +22,11 @@ interface Column {
 }
 
 const columns: readonly Column[] = [
-	{ id: 'categoria_id', label: 'ID', minWidth: 40, width: 40 },
+	{ id: 'id', label: 'ID', minWidth: 40, width: 40 },
 	{ id: 'nombre', label: 'Nombre', minWidth: 170, width: 100 },
-	{ id: 'created_at', label: 'Creado', minWidth: 100, format: formatDate, width: 100 },
+	{ id: 'created', label: 'Creado', minWidth: 100, format: formatDate, width: 100 },
 	{
-		id: 'updated_at',
+		id: 'updated',
 		label: 'Actualizado',
 		minWidth: 100,
 		format: formatDate,
@@ -88,14 +88,11 @@ export default function TablaCategorias({ rows, onEdit, onDelete }: TablaProps) 
 	}
 
 	const handleStartEdit = (row: Categoria) => {
-		setEditingId(row.categoria_id)
+		setEditingId(row.id)
 		setEditValue(row.nombre)
 	}
 
-	const handleEditKeyDown = (
-		e: React.KeyboardEvent<HTMLInputElement>,
-		row: Categoria
-	) => {
+	const handleEditKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, row: Categoria) => {
 		if (e.key === 'Enter') {
 			if (editValue.trim() && editValue !== row.nombre) {
 				onEdit?.({ ...row, nombre: editValue })
@@ -113,14 +110,14 @@ export default function TablaCategorias({ rows, onEdit, onDelete }: TablaProps) 
 
 	// Manejo del botón borrar
 	const handleDeleteClick = (row: Categoria) => {
-		if (confirmDeleteId === row.categoria_id && deleteEnabled) {
+		if (confirmDeleteId === row.id && deleteEnabled) {
 			setConfirmDeleteId(null)
 			setDeleteEnabled(false)
 			onDelete?.(row)
 			return
 		}
 
-		setConfirmDeleteId(row.categoria_id)
+		setConfirmDeleteId(row.id)
 		setDeleteEnabled(false)
 
 		if (deleteTimeoutRef.current) {
@@ -138,6 +135,8 @@ export default function TablaCategorias({ rows, onEdit, onDelete }: TablaProps) 
 			setDeleteEnabled(false)
 		}, 2500)
 	}
+
+	if (!rows) return <div>No hay datos...</div>
 
 	return (
 		<Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -158,72 +157,58 @@ export default function TablaCategorias({ rows, onEdit, onDelete }: TablaProps) 
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{rows
-							.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-							.map(row => (
-								<TableRow
-									hover
-									role='checkbox'
-									tabIndex={-1}
-									key={row.categoria_id}
-								>
-									{columns.map(column => {
-										if (column.id === 'acciones') {
-											return (
-												<TableCell key={column.id} align={column.align}>
-													<button
-														className='btn-borrar'
-														onClick={() => handleDeleteClick(row)}
-														disabled={
-															confirmDeleteId === row.categoria_id &&
-															!deleteEnabled
-														}
-													>
-														{confirmDeleteId === row.categoria_id
-															? deleteEnabled
-																? '¿Seguro de borrar?'
-																: '¿Seguro de borrar?'
-															: 'Borrar'}
-													</button>
-												</TableCell>
-											)
-										}
-										if (column.id === 'nombre') {
-											return (
-												<TableCell key={column.id} align={column.align}>
-													{editingId === row.categoria_id ? (
-														<input
-															type='text'
-															value={editValue}
-															autoFocus
-															onChange={e => setEditValue(e.target.value)}
-															onKeyDown={e => handleEditKeyDown(e, row)}
-															onBlur={handleEditBlur}
-														/>
-													) : (
-														<span
-															style={{ cursor: 'pointer' }}
-															onClick={() => handleStartEdit(row)}
-														>
-															{row.nombre}
-														</span>
-													)}
-												</TableCell>
-											)
-										}
-										const value = row[column.id]
+						{rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(row => (
+							<TableRow hover role='checkbox' tabIndex={-1} key={row.id}>
+								{columns.map(column => {
+									if (column.id === 'acciones') {
 										return (
-											<TableCell
-												className={column.id}
-												key={column.id}
-												align={column.align}
-											>
-												{column.format ? column.format(value) : value}
+											<TableCell key={column.id} align={column.align}>
+												<button
+													className='btn-borrar'
+													onClick={() => handleDeleteClick(row)}
+													disabled={confirmDeleteId === row.id && !deleteEnabled}
+												>
+													{confirmDeleteId === row.id
+														? deleteEnabled
+															? '¿Seguro de borrar?'
+															: '¿Seguro de borrar?'
+														: 'Borrar'}
+												</button>
 											</TableCell>
 										)
-									})}
-								</TableRow>
-							))}
+									}
+									if (column.id === 'nombre') {
+										return (
+											<TableCell key={column.id} align={column.align}>
+												{editingId === row.id ? (
+													<input
+														type='text'
+														value={editValue}
+														autoFocus
+														onChange={e => setEditValue(e.target.value)}
+														onKeyDown={e => handleEditKeyDown(e, row)}
+														onBlur={handleEditBlur}
+													/>
+												) : (
+													<span
+														style={{ cursor: 'pointer' }}
+														onClick={() => handleStartEdit(row)}
+													>
+														{row.nombre}
+													</span>
+												)}
+											</TableCell>
+										)
+									}
+									const value = row[column.id]
+									return (
+										<TableCell className={column.id} key={column.id} align={column.align}>
+											{column.format ? column.format(value) : value}
+										</TableCell>
+									)
+								})}
+							</TableRow>
+						))}
 					</TableBody>
 				</Table>
 			</TableContainer>

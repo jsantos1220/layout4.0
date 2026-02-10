@@ -3,23 +3,16 @@ import type { Seccion } from '@/index'
 import { useEffect, useRef, useState } from 'react'
 import { DraggableSidebar } from './DraggableSidebar'
 import Masonry from '@mui/lab/Masonry'
-
-const colors = [
-	{ name: 'Azul', value: '#2196f3' },
-	{ name: 'Amarillo', value: '#ffc107' },
-	{ name: 'Rojo', value: '#f44336' },
-	{ name: 'Verde', value: '#4caf50' },
-]
+import { LayoutGrid, Rows3 } from 'lucide-react'
+import styled from 'styled-components'
 
 export default function SidebarSecciones({ secciones }: { secciones: Seccion[] | undefined }) {
-	const [selectedColor, setSelectedColor] = useState(colors[0])
-	const [isOpen, setIsOpen] = useState(false)
-
 	const [seccionesFiltradas, setSeccionesFiltradas] = useState<Seccion[] | null>()
 	const [categorias, setCategorias] = useState<string[]>([])
 	const [categoriasFiltradas, setCategoriasFiltradas] = useState<string | null>('')
 	const [opciones, setOpciones] = useState<string[]>([])
 	const [opcionesFiltradas, setOpcionesFiltradas] = useState<string | null>('')
+	const [columnas, setColumnas] = useState(true)
 
 	const [altura, setAltura] = useState<number>(0)
 	const seccionesRef = useRef<HTMLDivElement>(null)
@@ -42,6 +35,7 @@ export default function SidebarSecciones({ secciones }: { secciones: Seccion[] |
 		const nuevasOpciones = new Set([...opciones])
 
 		setCategorias([...nuevasCategorias])
+
 		//setCategoriasFiltradas([...nuevasCategorias])
 		setOpciones([...nuevasOpciones])
 	}, [secciones])
@@ -92,7 +86,7 @@ export default function SidebarSecciones({ secciones }: { secciones: Seccion[] |
 
 	return (
 		<div className='secciones'>
-			<div className='selectores margin-bottom-s'>
+			<Selectores className='margin-bottom-s'>
 				<Autocomplete
 					disablePortal
 					options={categorias}
@@ -117,37 +111,13 @@ export default function SidebarSecciones({ secciones }: { secciones: Seccion[] |
 					}}
 				/>
 
-				<div className='color-selector'>
-					<div
-						className='color-box'
-						style={{ backgroundColor: selectedColor.value }}
-						onClick={() => setIsOpen(!isOpen)}
-					></div>
-
-					{isOpen && (
-						<ul className='colors-list'>
-							{colors.map(color => (
-								<li
-									key={color.name}
-									onClick={() => {
-										setSelectedColor(color)
-										setIsOpen(false)
-									}}
-								>
-									<span
-										className='color-preview'
-										style={{ backgroundColor: color.value }}
-									></span>
-									<span className='color-name'>{color.name}</span>
-								</li>
-							))}
-						</ul>
-					)}
+				<div className='color-selector' onClick={() => setColumnas(!columnas)}>
+					<div className='color-box'>{columnas == true ? <Rows3 /> : <LayoutGrid />}</div>
 				</div>
-			</div>
+			</Selectores>
 
 			<div className='contenedor-secciones' ref={seccionesRef} style={{ height: `${altura}px` }}>
-				<Masonry columns={2} spacing={1.5}>
+				<Masonry columns={columnas == true ? 2 : 1} spacing={1.5}>
 					{(seccionesFiltradas ?? []).map(seccion => (
 						<DraggableSidebar key={seccion.id} seccion={seccion} />
 					))}
@@ -156,3 +126,65 @@ export default function SidebarSecciones({ secciones }: { secciones: Seccion[] |
 		</div>
 	)
 }
+
+const Selectores = styled.div`
+	display: flex;
+	gap: 20px;
+
+	.color-selector {
+		position: relative;
+		border: 1px solid ${({ theme }) => theme.grey};
+		padding: 7px 6px 6px 7px;
+		border-radius: 4px;
+
+		.color-box {
+			cursor: pointer;
+			width: 25px;
+			height: 25px;
+		}
+
+		&:hover {
+			cursor: pointer;
+			background-color: ${({ theme }) => theme.primary};
+			color: white;
+		}
+	}
+
+	.colors-list {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		width: 200px;
+		margin-top: 8px;
+		padding: 8px;
+		background: white;
+		border-radius: 4px;
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		list-style: none;
+		z-index: 1000;
+
+		li {
+			display: flex;
+			align-items: center;
+			padding: 8px;
+			cursor: pointer;
+			transition: background-color 0.2s ease;
+
+			&:hover {
+				background-color: #f5f5f5;
+			}
+		}
+
+		.color-preview {
+			width: 24px;
+			height: 24px;
+			border-radius: 4px;
+			margin-right: 8px;
+			border: 1px solid #ddd;
+		}
+
+		.color-name {
+			font-size: 14px;
+		}
+	}
+`

@@ -18,7 +18,7 @@ export async function getCategoriaById(id: string): Promise<Categoria | undefine
 export async function getAllCategorias(): Promise<Categoria[] | undefined> {
 	try {
 		const records = await pb.collection('categorias').getFullList<Categoria>({
-			//sort: 'created',
+			sort: '-created',
 			//filter: 'en_papelera != true',
 			//TODO: esto hay que limitarlo si lo va a usar mas gente
 			//fields:

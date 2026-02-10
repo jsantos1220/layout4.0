@@ -25,11 +25,7 @@ export default function Secciones() {
 	let navigate = useNavigate()
 	const queryClient = useQueryClient()
 
-	const {
-		data: secciones,
-		//error: errorQuery,
-		//isLoading,
-	} = useQuery({
+	const { data: secciones } = useQuery({
 		queryKey: ['secciones'],
 		queryFn: async () => getAllSecciones(),
 	})

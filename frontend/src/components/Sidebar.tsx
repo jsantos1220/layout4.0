@@ -1,4 +1,4 @@
-import authClient from '@lib/auth-client'
+import useAuthStore from '@context/useAuthContext'
 import {
 	ArrowUpNarrowWide,
 	ArrowUpWideNarrow,
@@ -13,14 +13,11 @@ import { Link, useNavigate } from 'react-router'
 export default function Sidebar() {
 	const navigate = useNavigate()
 
+	const { logout } = useAuthStore()
+
 	const handleLogout = async () => {
-		await authClient.signOut({
-			fetchOptions: {
-				onSuccess: () => {
-					navigate('/login')
-				},
-			},
-		})
+		logout()
+		navigate('/login')
 	}
 
 	return (
