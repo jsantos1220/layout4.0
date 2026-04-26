@@ -108,7 +108,7 @@ export default function SidebarControllers({
 					name: pagina.nombre,
 					sections: pagina.secciones?.map(seccion => {
 						return {
-							name: 'Seccion: ' + seccion.nombre,
+							name: seccion.nombre,
 						}
 					}),
 				}

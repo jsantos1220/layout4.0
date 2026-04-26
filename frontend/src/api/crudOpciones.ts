@@ -14,6 +14,20 @@ export async function getOpcionById(id: string): Promise<Opcion | undefined> {
 	}
 }
 
+//Obtener registro por ID
+export async function getOpcionByName(nombre: string): Promise<Opcion | undefined> {
+	try {
+		const record = await pb
+			.collection('opciones')
+			.getFirstListItem<Opcion>(`nombre = '${nombre}'`)
+
+		return record
+	} catch (error) {
+		console.log(error)
+		//throw error
+	}
+}
+
 //Obtener todos los registros
 export async function getAllOpciones(): Promise<Opcion[] | undefined> {
 	try {

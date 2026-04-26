@@ -16,6 +16,20 @@ export async function getSeccionById(id: string): Promise<Seccion | undefined> {
 	}
 }
 
+//Obtener registro por Nombre
+export async function getSeccionByName(nombre: string): Promise<Seccion | undefined> {
+	try {
+		const record = await pb
+			.collection('secciones')
+			.getFirstListItem<Seccion>(`nombre = '${nombre}'`)
+
+		return record
+	} catch (error) {
+		//console.log(error)
+		//throw error
+	}
+}
+
 //Obtener todos los registros
 export async function getAllSecciones(): Promise<Seccion[] | undefined> {
 	try {
@@ -78,6 +92,45 @@ export async function createSeccion(): Promise<Seccion | undefined> {
 		return record
 	} catch (error) {
 		//console.log(error)
+		throw error
+	}
+}
+
+//Actualizar registro por ID
+export async function createfullSeccion(
+	seccion: SeccionUpdatePayload,
+): Promise<Seccion | undefined> {
+	try {
+		const user = useAuthStore.getState().user
+		const formData = new FormData()
+
+		console.log(seccion)
+
+		// Campos normales
+		formData.append('usuario', user.id)
+		formData.append('nombre', seccion.nombre)
+		formData.append('codigo', seccion.codigo)
+		formData.append('liked', String(seccion.liked))
+		formData.append('imagen_background', String(seccion.imagen_background))
+		formData.append('titulo', String(seccion.titulo))
+		formData.append('subtitulo', String(seccion.subtitulo))
+		formData.append('descripcion', String(seccion.descripcion))
+		formData.append('cta', String(seccion.cta))
+		formData.append('items', String(seccion.items))
+		formData.append('liked', String(seccion.liked))
+		formData.append('activo', String(seccion.activo))
+
+		// Imágenes (SOLO si existen)
+		if (seccion.imagen_principal) formData.append('imagen_principal', seccion.imagen_principal)
+		if (seccion.imagen_amarilla) formData.append('imagen_amarilla', seccion.imagen_amarilla)
+		if (seccion.imagen_roja) formData.append('imagen_roja', seccion.imagen_roja)
+		if (seccion.imagen_verde) formData.append('imagen_verde', seccion.imagen_verde)
+
+		const record = await pb.collection('secciones').create<Seccion>(formData)
+
+		return record
+	} catch (error) {
+		console.log(error)
 		throw error
 	}
 }

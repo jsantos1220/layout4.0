@@ -17,6 +17,7 @@ import { ThemeProvider } from 'styled-components'
 import theme from '@styles/theme'
 import useAuthStore from '@context/useAuthContext'
 import { useEffect } from 'react'
+import Importar from '@pages/Importar'
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -57,6 +58,7 @@ export default function App() {
 							<Route path='/clientes/:id' element={<Cliente />} />
 
 							<Route path='/plantillas' element={<Plantillas />} />
+							<Route path='/importar' element={<Importar />} />
 						</Route>
 
 						<Route path='*' element={<Navigate to='/' replace />} />

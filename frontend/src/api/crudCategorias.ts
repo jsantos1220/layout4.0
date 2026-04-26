@@ -14,6 +14,20 @@ export async function getCategoriaById(id: string): Promise<Categoria | undefine
 	}
 }
 
+//Obtener registro por ID
+export async function getCategoriaByName(nombre: string): Promise<Categoria | undefined> {
+	try {
+		const record = await pb
+			.collection('categorias')
+			.getFirstListItem<Categoria>(`nombre = '${nombre}'`)
+
+		return record
+	} catch (error) {
+		console.log(error)
+		//throw error
+	}
+}
+
 //Obtener todos los registros
 export async function getAllCategorias(): Promise<Categoria[] | undefined> {
 	try {

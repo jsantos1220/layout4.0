@@ -32,10 +32,7 @@ export default function TextoEditable({ texto, setTexto, size }: TextoEditableTy
 	return (
 		<div className={`titulo-principal`}>
 			{!editarTitulo ? (
-				<span
-					style={{ cursor: 'pointer' }}
-					onClick={() => setEditarTitulo(!editarTitulo)}
-				>
+				<span style={{ cursor: 'pointer' }} onClick={() => setEditarTitulo(!editarTitulo)}>
 					{texto}
 				</span>
 			) : (

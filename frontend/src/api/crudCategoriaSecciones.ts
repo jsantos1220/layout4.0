@@ -16,6 +16,25 @@ export async function getCategoriaSeccionById(
 	}
 }
 
+//Obtener registro por categoria y seccion
+export async function getCategoriaSeccionByNames(
+	categoria: string,
+	seccion: string,
+): Promise<Categorias_secciones | undefined> {
+	try {
+		const record = await pb
+			.collection('categorias_secciones')
+			.getFirstListItem<Categorias_secciones>(
+				`categoria = '${categoria}' && seccion = '${seccion}'`,
+			)
+
+		return record
+	} catch (error) {
+		//console.log(error)
+		//throw error
+	}
+}
+
 //Obtener todos los registros
 export async function getAllCategoriaSeccionesById(
 	id: string,

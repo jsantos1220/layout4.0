@@ -4,6 +4,7 @@ import {
 	ArrowUpWideNarrow,
 	GalleryVertical,
 	House,
+	Import,
 	LayoutPanelLeft,
 	LogOut,
 	Users,
@@ -74,6 +75,16 @@ export default function Sidebar() {
 
 						<div className='popover'>
 							<p>Clientes</p>
+						</div>
+					</div>
+
+					<div className='item'>
+						<Link to='/importar' className=''>
+							<Import />
+						</Link>
+
+						<div className='popover'>
+							<p>Importar</p>
 						</div>
 					</div>
 				</div>

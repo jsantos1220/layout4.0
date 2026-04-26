@@ -44,7 +44,7 @@ export default function Proyecto() {
 		setNuevaImagen,
 	} = useProjectContext()
 	const [seccionActiva, setSeccionActiva] = useState<Seccion | null>(null)
-	const [titulo, setTitulo] = useState<string>('')
+	const [titulo, setTitulo] = useState<string>('Hola')
 	const queryClient = useQueryClient()
 	const notyf = new Notyf()
 
@@ -76,7 +76,6 @@ export default function Proyecto() {
 
 	useEffect(() => {
 		if (typeof dataSecciones == 'object') {
-			console.log('esto entra?')
 			//Agregar el draggable_id a cada sección de las paginas
 			const nuevasSecciones = dataSecciones.map((seccion: Seccion) => {
 				return {
@@ -107,7 +106,7 @@ export default function Proyecto() {
 			const payload: ProyectoUpdatePayload = {
 				usuario: proyecto.usuario,
 				cliente: proyecto.cliente || '',
-				nombre: proyecto.nombre || '',
+				nombre: titulo || '',
 				imagen: nuevaImagen || proyecto.imagen,
 				codigo: proyecto.codigo || '',
 				contenido: proyecto.contenido || '',

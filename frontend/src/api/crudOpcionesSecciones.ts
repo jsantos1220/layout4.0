@@ -14,6 +14,23 @@ export async function getOpcionSeccionById(id: string): Promise<Opciones_seccion
 	}
 }
 
+//Obtener registro por opcion y seccion
+export async function getOpcionesSeccionByNames(
+	opcion: string,
+	seccion: string,
+): Promise<Opciones_secciones | undefined> {
+	try {
+		const record = await pb
+			.collection('opciones_secciones')
+			.getFirstListItem<Opciones_secciones>(`opcion = '${opcion}' && seccion = '${seccion}'`)
+
+		return record
+	} catch (error) {
+		//console.log(error)
+		//throw error
+	}
+}
+
 //Obtener todos los registros
 export async function getAllOpcionesSeccionesById(
 	id: string,
